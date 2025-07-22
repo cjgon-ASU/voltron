@@ -87,7 +87,7 @@ namespace ProjectTemplate
             //our connection string comes from our web.config file like we talked about earlier
             string sqlConnectString = getConString();
             //here's our query.  A basic select with nothing fancy.  Note the parameters that begin with @
-            string sqlSelect = "SELECT empid, is_admin FROM users WHERE username=@idValue and pass=@passValue";
+            string sqlSelect = "SELECT empid, username, is_admin FROM users WHERE username=@idValue and pass=@passValue";
 
             //set up our connection object to be ready to use our connection string
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
@@ -112,9 +112,23 @@ namespace ProjectTemplate
             if (sqlDt.Rows.Count > 0)
             {
                 //flip our flag to true so we return a value that lets them know they're logged in
-                Session["id"] = sqlDt.Rows[0]["empid"];
+                int empId = Convert.ToInt32(sqlDt.Rows[0]["empid"]);
+                Session["id"] = empId;
+                Session["loggedInUsername"] = sqlDt.Rows[0]["username"].ToString();
                 Session["isAdmin"] = sqlDt.Rows[0]["is_admin"];
-				success = true;
+
+                //Check if the user is clocked in, (to store in session)
+                string checkClockInSql = "SELECT COUNT(*) FROM timelogs WHERE empid = @empid AND clock_out IS NULL";
+                sqlConnection.Open();
+                using (MySqlCommand checkCmd = new MySqlCommand(checkClockInSql, sqlConnection))
+                {
+                    checkCmd.Parameters.AddWithValue("@empid", empId);
+                    int openClockIn = Convert.ToInt32(checkCmd.ExecuteScalar());
+
+                    //Set session status based on whether there's an open clock in record in the DB
+                    Session["isClockedIn"] = (openClockIn > 0);
+                }
+                success = true;
             }
             //return the result!
             return success;
@@ -132,24 +146,24 @@ namespace ProjectTemplate
             return true;
         }
 
-        // This method returns the current login information of the user
+        //This method returns the current login information of the user
         [WebMethod(EnableSession = true)]
         public string LoginInfo()
         {
-            // Check if the username is stored in the session, indicating a logged-in user
-            if (Session["id"] != null)
+            //Check if the username is stored in the session, indicating a logged in user
+            if (Session["loggedInUsername"] != null)
             {
-                string username = Session["id"].ToString();
+                string username = Session["loggedInUsername"].ToString();
                 string userInfo = $"Logged in as: {username}";
 
-                // Check if admin status is stored and if the user is an admin
+                //Check if admin status is stored and if the user is an admin
                 if (Session["isAdmin"] != null && (bool)Session["isAdmin"] == true)
                 {
                     userInfo += " (Admin)";
                 }
                 else
                 {
-                    userInfo += " (User)"; // Explicitly state "User" for non admins
+                    userInfo += " (User)";
                 }
                 return userInfo;
             }
@@ -254,6 +268,60 @@ namespace ProjectTemplate
                 }
             }
         }
+        [WebMethod(EnableSession = true)]
+        public List<string> GetCurrentlyClockedInUsers()
+        {
+            // 1. Authorization Check: Only admins can call this method
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                // You might throw an exception, or return an empty list/error string
+                // For simplicity, returning an error message string or an empty list is fine for a basic app.
+                // For a List<string>, returning an empty list might be cleaner.
+                // Or change return type to string and return "Error: Unauthorized access."
+                HttpContext.Current.Response.StatusCode = 401; // Example of setting status code directly (less common in ASMX body return)
+                HttpContext.Current.Response.StatusDescription = "Unauthorized Access";
+                return new List<string> { "Error: You must be an administrator to view this list." };
+            }
+
+            List<string> clockedInUsers = new List<string>();
+            string sqlConnectString = getConString();
+            // Select usernames of users who have a clock-in entry with a NULL clock_out
+            // Joining with the 'users' table to get the 'username' (assuming 'users' table has 'username')
+            string sqlQuery = "SELECT u.username FROM timelogs tl " +
+                              "INNER JOIN users u ON tl.empid = u.empid " +
+                              "WHERE tl.clock_out IS NULL";
+
+            try
+            {
+                using (MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString))
+                {
+                    sqlConnection.Open();
+                    using (MySqlCommand sqlCommand = new MySqlCommand(sqlQuery, sqlConnection))
+                    {
+                        using (MySqlDataReader reader = sqlCommand.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                clockedInUsers.Add(reader["username"].ToString());
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                HttpContext.Current.Response.Write("Error in GetCurrentlyClockedInUsers: " + ex.Message + " Stack Trace: " + ex.StackTrace);
+                return new List<string> { "An error occurred while fetching the list of clocked-in users." };
+            }
+
+            if (clockedInUsers.Count == 0)
+            {
+                clockedInUsers.Add("No users currently clocked in.");
+            }
+
+            return clockedInUsers;
+        }
     }
+
 }
 
