@@ -1,59 +1,60 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8" />
-	<title></title>
-	<!--DO NOT FORGET THIS SCRIPT TAG SO YOU CAN USE JQUERY!!!!!-->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <meta charset="utf-8" />
+    <title></title>
+    <!--DO NOT FORGET THIS SCRIPT TAG SO YOU CAN USE JQUERY!!!!!-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
-	<!--YOUR OWN JAVASCRIPT CAN GO RIGHT HERE-->
-	<script type="text/javascript">
-		function TestButtonHandler() {
-			var webMethod = "ProjectServices.asmx/TestConnection";
-			var parameters = "{}";
+    <!--YOUR OWN JAVASCRIPT CAN GO RIGHT HERE-->
+    <script type="text/javascript">
+        function TestButtonHandler() {
+            var webMethod = "ProjectServices.asmx/TestConnection";
+            var parameters = "{}";
 
-			//jQuery ajax method
-			$.ajax({
-				type: "POST",
-				url: webMethod,
-				data: parameters,
-				contentType: "application/json; charset=utf-8",
-				dataType: "json",
-				success: function (msg) {
-					var responseFromServer = msg.d;
-					alert(responseFromServer);
-				},
-				error: function (e) {
-					alert("this code will only execute if javascript is unable to access the webservice");
-				}
-			});
-		}
+            //jQuery ajax method
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    var responseFromServer = msg.d;
+                    alert(responseFromServer);
+                },
+                error: function (e) {
+                    alert("this code will only execute if javascript is unable to access the webservice");
+                }
+            });
+        }
 
-		function LogOn() {
-			var webMethod = "ProjectServices.asmx/LogOn"
-			var parameters = ""
-		}
-	</script>
-	<!--END OF YOUR OWN JAVASCRIPT-->
+        function LogOn() {
+            var webMethod = "ProjectServices.asmx/LogOn"
+            var parameters = ""
+        }
+    </script>
+    <!--END OF YOUR OWN JAVASCRIPT-->
 
-	<!--AND YOUR OWN CSS CAN GO HERE AS WELL-->
-	<style>
+    <!--AND YOUR OWN CSS CAN GO HERE AS WELL-->
+    <style>
 
-	</style>
-	<!--END OF YOUR OWN CSS-->
-</head >
+    </style>
+    <!--END OF YOUR OWN CSS-->
+</head>
 <body>
-	<button onclick="javascript: TestButtonHandler();">Click here to test connection!</button>
+    <button onclick="javascript: TestButtonHandler();">Click here to test connection!</button>
 
-	<div class="container"> <!--This is the username and password input boxes!-->
-		<label for="username"><b>Username</b></label>
-		<input type="text" placeholder="Enter Username" name="username" required/>
-		
-		<label for="pass"><b>Password</b></label>
-		<input type="text" placeholder="Enter Password" name="pass" required/>
+    <div class="container">
+        <!--This is the username and password input boxes!-->
+        <label for="username"><b>Username</b></label>
+        <input type="text" placeholder="Enter Username" name="username" required />
 
-	</div>
+        <label for="pass"><b>Password</b></label>
+        <input type="text" placeholder="Enter Password" name="pass" required />
 
-	<button onclick="LogOn();">Log On</button>
+    </div>
+
+    <button onclick="LogOn();">Log On</button>
 </body>
-</html >
+</html>

@@ -63,16 +63,6 @@ namespace ProjectTemplate
 			}
 		}
 
-        [WebMethod(EnableSession = true)]
-		public int[] TemplateTest()
-		{
-			int[] test = new int[4];
-			test[0] = 42;
-			test[1] = 10;
-			test[2] = 33;
-			test[3] = 12;
-			return test;
-        }
 
         [WebMethod(EnableSession = true)]
         public bool LogOn(string uid, string pass)
@@ -120,14 +110,14 @@ namespace ProjectTemplate
                 //Check if the user is clocked in, (to store in session)
                 string checkClockInSql = "SELECT COUNT(*) FROM timelogs WHERE empid = @empid AND clock_out IS NULL";
                 sqlConnection.Open();
-                using (MySqlCommand checkCmd = new MySqlCommand(checkClockInSql, sqlConnection))
-                {
-                    checkCmd.Parameters.AddWithValue("@empid", empId);
-                    int openClockIn = Convert.ToInt32(checkCmd.ExecuteScalar());
+                MySqlCommand checkCmd = new MySqlCommand(checkClockInSql, sqlConnection);
+                
+                checkCmd.Parameters.AddWithValue("@empid", empId);
+                int openClockIn = Convert.ToInt32(checkCmd.ExecuteScalar());
 
-                    //Set session status based on whether there's an open clock in record in the DB
-                    Session["isClockedIn"] = (openClockIn > 0);
-                }
+                //Set session status based on whether there's an open clock in record in the DB
+                Session["isClockedIn"] = (openClockIn > 0);
+                
                 success = true;
             }
             //return the result!
@@ -183,7 +173,7 @@ namespace ProjectTemplate
                 return "Error: You must be logged in to clock in.";
             }
 
-            //Check if user is already clocked in
+            //Check if user is already clocked in (from session)
             if (Session["isClockedIn"] != null && (bool)Session["isClockedIn"] == true)
             {
                 return "Error: You are already clocked in.";
@@ -193,31 +183,41 @@ namespace ProjectTemplate
             DateTime clockInTime = DateTime.Now;
 
             string sqlConnectString = getConString();
-            // SQL for inserting data
-            string sqlInsert = "INSERT INTO timelogs (empid, clock_in, clock_out) VALUES (@empid, @clockInTime, NULL)";
 
-            using (MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString))
+            //SQL for inserting data into timelogs and setting clock in status in DB
+            string sqlInsertTimelog = "INSERT INTO timelogs (empid, clock_in, clock_out) VALUES (@empid, @clockInTime, NULL)";
+            string sqlUpdateUserClockedIn = "UPDATE users SET is_clocked_in = 1 WHERE empid = @empid";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand timelogCmd = new MySqlCommand(sqlInsertTimelog, sqlConnection);
+            MySqlCommand userUpdateCmd = new MySqlCommand(sqlUpdateUserClockedIn, sqlConnection);
+
+            sqlConnection.Open();
+
+            //INSERT into timelogs
+            timelogCmd.Parameters.AddWithValue("@empid", empId);
+            timelogCmd.Parameters.AddWithValue("@clockInTime", clockInTime);
+            int timelogRowsAffected = timelogCmd.ExecuteNonQuery();
+
+            if (timelogRowsAffected > 0)
             {
-                sqlConnection.Open();
-                using (MySqlCommand sqlCommand = new MySqlCommand(sqlInsert, sqlConnection))
+                //UPDATE on users table
+                userUpdateCmd.Parameters.AddWithValue("@empid", empId);
+                int userRowsAffected = userUpdateCmd.ExecuteNonQuery();
+
+                if (userRowsAffected > 0)
                 {
-                    sqlCommand.Parameters.AddWithValue("@empid", empId);
-                    sqlCommand.Parameters.AddWithValue("@clockInTime", clockInTime);
-
-                    // Feedback if you are clocked in
-                    int rowsAffected = sqlCommand.ExecuteNonQuery();
-
-                    if (rowsAffected > 0)
-                    {
-                        Session["isClockedIn"] = true;
-                        return "Successfully clocked in at " + clockInTime.ToString("yyyy-MM-dd HH:mm:ss");
-                    }
-                    else
-                    {
-                        //Clock in rror message
-                        return "Error: Failed to record clock in.";
-                    }
+                    Session["isClockedIn"] = true;
+                    return "Successfully clocked in at " + clockInTime.ToString("yyyy-MM-dd HH:mm:ss");
                 }
+                else
+                {
+                    return "Error: Clock in recorded, but user status not updated.";
+                }
+            }
+            else
+            {
+                return "Error: Failed to record timelogs table).";
             }
         }
         // This method allows a user to clock out
@@ -230,7 +230,7 @@ namespace ProjectTemplate
                 return "Error: You must be logged in to clock out.";
             }
 
-            //Check if user is not clocked in
+            //Check if user is not clocked in (from session)
             if (Session["isClockedIn"] == null || (bool)Session["isClockedIn"] == false)
             {
                 return "Error: You are not currently clocked in.";
@@ -240,78 +240,89 @@ namespace ProjectTemplate
             DateTime clockOutTime = DateTime.Now;
 
             string sqlConnectString = getConString();
-            string sqlUpdate = "UPDATE timelogs SET clock_out = @clockOutTime " +
-                               "WHERE empid = @empid AND clock_out IS NULL " +
-                               "ORDER BY clock_in DESC LIMIT 1";
 
-            using (MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString))
+            //SQL for updating data into timelogs and setting clock out status in DB
+            string sqlUpdateTimelog = "UPDATE timelogs SET clock_out = @clockOutTime " +
+                                      "WHERE empid = @empid AND clock_out IS NULL " +
+                                      "ORDER BY clock_in DESC LIMIT 1";
+            
+            string sqlUpdateUserClockedOut = "UPDATE users SET is_clocked_in = 0 WHERE empid = @empid";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand timelogCmd = new MySqlCommand(sqlUpdateTimelog, sqlConnection);
+            MySqlCommand userUpdateCmd = new MySqlCommand(sqlUpdateUserClockedOut, sqlConnection);
+
+            sqlConnection.Open();
+            int timelogRowsAffected = 0;
+            int userRowsAffected = 0;
+
+            //UPDATE on timelogs
+            timelogCmd.Parameters.AddWithValue("@clockOutTime", clockOutTime);
+            timelogCmd.Parameters.AddWithValue("@empid", empId);
+            timelogRowsAffected = timelogCmd.ExecuteNonQuery();
+
+            //Update user status if timelog update was successful
+            if (timelogRowsAffected > 0)
             {
-                sqlConnection.Open();
-                using (MySqlCommand sqlCommand = new MySqlCommand(sqlUpdate, sqlConnection))
+                userUpdateCmd.Parameters.AddWithValue("@empid", empId);
+                userRowsAffected = userUpdateCmd.ExecuteNonQuery();
+
+                if (userRowsAffected > 0)
                 {
-                    sqlCommand.Parameters.AddWithValue("@clockOutTime", clockOutTime);
-                    sqlCommand.Parameters.AddWithValue("@empid", empId);
-
-                    // Feedback if you are clocked out
-                    int rowsAffected = sqlCommand.ExecuteNonQuery();
-
-                    if (rowsAffected > 0)
-                    {
-                        Session["isClockedIn"] = false;
-                        return "Successfully clocked out at " + clockOutTime.ToString("yyyy-MM-dd HH:mm:ss");
-                    }
-                    else
-                    {
-                        //Clock out rror message
-                        return "Error: Failed to record clock out.";
-                    }
+                    Session["isClockedIn"] = false; // Update session status
+                    return "Successfully clocked out at " + clockOutTime.ToString("yyyy-MM-dd HH:mm:ss");
                 }
+                else
+                {
+                    return "Error: Clock out recorded, but user status not updated.";
+                }
+            }
+            else
+            {
+                return "Error: No clock in record found to clock out from.";
             }
         }
         [WebMethod(EnableSession = true)]
-        public List<string> GetCurrentlyClockedInUsers()
+        public List<string> ClockedInUsers()
         {
-            // 1. Authorization Check: Only admins can call this method
+            //admin session check
             if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
             {
-                // You might throw an exception, or return an empty list/error string
-                // For simplicity, returning an error message string or an empty list is fine for a basic app.
-                // For a List<string>, returning an empty list might be cleaner.
-                // Or change return type to string and return "Error: Unauthorized access."
-                HttpContext.Current.Response.StatusCode = 401; // Example of setting status code directly (less common in ASMX body return)
-                HttpContext.Current.Response.StatusDescription = "Unauthorized Access";
+               
                 return new List<string> { "Error: You must be an administrator to view this list." };
             }
 
             List<string> clockedInUsers = new List<string>();
             string sqlConnectString = getConString();
-            // Select usernames of users who have a clock-in entry with a NULL clock_out
-            // Joining with the 'users' table to get the 'username' (assuming 'users' table has 'username')
-            string sqlQuery = "SELECT u.username FROM timelogs tl " +
-                              "INNER JOIN users u ON tl.empid = u.empid " +
-                              "WHERE tl.clock_out IS NULL";
+
+            string sqlQuery = "SELECT users.username, timelogs.clock_in " +
+                              "FROM users " +
+                              "INNER JOIN timelogs ON users.empid = timelogs.empid " +
+                              "WHERE users.is_clocked_in = 1 AND timelogs.clock_out IS NULL " +
+                              "ORDER BY timelogs.clock_in ASC";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlQuery, sqlConnection);
 
             try
             {
-                using (MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString))
+                sqlConnection.Open();
+                MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+                DataTable sqlDt = new DataTable();
+                sqlDa.Fill(sqlDt);
+
+                //loop to add usernames to the list
+                foreach (DataRow row in sqlDt.Rows)
                 {
-                    sqlConnection.Open();
-                    using (MySqlCommand sqlCommand = new MySqlCommand(sqlQuery, sqlConnection))
-                    {
-                        using (MySqlDataReader reader = sqlCommand.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                clockedInUsers.Add(reader["username"].ToString());
-                            }
-                        }
-                    }
+                    string username = row["username"].ToString();
+                    string clockInTime = Convert.ToDateTime(row["clock_in"]).ToString("yyyy-MM-dd HH:mm:ss");
+                    clockedInUsers.Add($"{username} (Clocked in at {clockInTime})");
                 }
+
             }
             catch (Exception ex)
             {
-                HttpContext.Current.Response.Write("Error in GetCurrentlyClockedInUsers: " + ex.Message + " Stack Trace: " + ex.StackTrace);
-                return new List<string> { "An error occurred while fetching the list of clocked-in users." };
+                return new List<string> { "An error occurred while fetching the list of clocked in users." };
             }
 
             if (clockedInUsers.Count == 0)
