@@ -28,6 +28,11 @@
 				}
 			});
 		}
+
+		function LogOn() {
+			var webMethod = "ProjectServices.asmx/LogOn"
+			var parameters = ""
+		}
 	</script>
 	<!--END OF YOUR OWN JAVASCRIPT-->
 
@@ -39,5 +44,16 @@
 </head >
 <body>
 	<button onclick="javascript: TestButtonHandler();">Click here to test connection!</button>
+
+	<div class="container"> <!--This is the username and password input boxes!-->
+		<label for="username"><b>Username</b></label>
+		<input type="text" placeholder="Enter Username" name="username" required/>
+		
+		<label for="pass"><b>Password</b></label>
+		<input type="text" placeholder="Enter Password" name="pass" required/>
+
+	</div>
+
+	<button onclick="LogOn();">Log On</button>
 </body>
 </html >
