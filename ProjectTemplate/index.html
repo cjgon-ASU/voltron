@@ -33,8 +33,8 @@
 			var id = document.getElementById("logonId").value;
 			var pass = document.getElementById("logonPass").value;
 
-			var webMethod = "ProjectServices.asmx/LogOn"
-			var parameters = "{\"uid\":\"" + encodeURI(id) + "\", \"pass\":\"" + encodeURI(pass) + "\"}";
+			var webMethod = "/logon";
+var parameters = JSON.stringify({ uid: id, pass: pass });
 
 			$.ajax({
 				type: "POST",
@@ -43,7 +43,7 @@
 				contentType: "application/json; charset=utf-8",
 				dataType: "json",
 				success: function (msg) {
-					var responseFromServer = msg.d;
+					var responseFromServer = msg;
 					if (responseFromServer == true) {
 						window.location.href = "portal.html";
 					}
