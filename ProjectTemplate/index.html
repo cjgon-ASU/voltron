@@ -43,7 +43,7 @@
 				contentType: "application/json; charset=utf-8",
 				dataType: "json",
 				success: function (msg) {
-					var responseFromServer = msg;
+					var responseFromServer = msg.d;
 					if (responseFromServer == true) {
 						window.location.href = "portal.html";
 					}
