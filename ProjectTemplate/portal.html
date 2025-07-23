@@ -66,7 +66,7 @@
 				dataType: "json",
 				success: function (msg) {
 					var responseFromServer = msg.d;
-					if (responseFromServer == true) {
+					if (responseFromServer.startsWith("Successfully clocked in")) {
 						document.getElementById("clockInBtn").style.display = "none";
 				        document.getElementById("logOffBtn").style.display = "none";
                         document.getElementById("clockOutBtn").style.display = "inline";
@@ -95,7 +95,7 @@
 				dataType: "json",
 				success: function (msg) {
 					var responseFromServer = msg.d;
-					if (responseFromServer == true) {
+					if (responseFromServer.startsWith("Successfully clocked out")) {
 						document.getElementById("clockInBtn").style.display = "inline";
 				        document.getElementById("logOffBtn").style.display = "inline";
                         document.getElementById("clockOutBtn").style.display = "none";
