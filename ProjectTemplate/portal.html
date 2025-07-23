@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title></title>
+	<!--DO NOT FORGET THIS SCRIPT TAG SO YOU CAN USE JQUERY!!!!!-->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+	<!--YOUR OWN JAVASCRIPT CAN GO RIGHT HERE-->
+	<script type="text/javascript">
+		function TestButtonHandler() {
+			var webMethod = "ProjectServices.asmx/TestConnection";
+			var parameters = "{}";
+
+			//jQuery ajax method
+			$.ajax({
+				type: "POST",
+				url: webMethod,
+				data: parameters,
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
+				success: function (msg) {
+					var responseFromServer = msg.d;
+					alert(responseFromServer);
+				},
+				error: function (e) {
+					alert("this code will only execute if javascript is unable to access the webservice");
+				}
+			});
+		}
+
+		function LogOff() {
+
+			var webMethod = "ProjectServices.asmx/LogOff"
+			var parameters = "";
+
+			$.ajax({
+				type: "POST",
+				url: webMethod,
+				data: parameters,
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
+				success: function (msg) {
+					var responseFromServer = msg.d;
+					if (responseFromServer == true) {
+						window.location.href = "index.html";
+					}
+				},
+				error: function (e) {
+					alert("this code will only execute if javascript is unable to access the webservice");
+				}
+			});
+		}
+
+
+        function ClockIn() {
+
+			var webMethod = "ProjectServices.asmx/ClockIn"
+			var parameters = "";
+
+			$.ajax({
+				type: "POST",
+				url: webMethod,
+				data: parameters,
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
+				success: function (msg) {
+					var responseFromServer = msg.d;
+					if (responseFromServer == true) {
+						document.getElementById("clockInBtn").style.display = "none";
+				        document.getElementById("logOffBtn").style.display = "none";
+                        document.getElementById("clockOutBtn").style.display = "inline";
+                        document.getElementById("clockedinconfirm").style.display = "inline";
+					}
+					else {
+						alert("Unable to clock in")
+					}
+				},
+				error: function (e) {
+					alert("this code will only execute if javascript is unable to access the webservice");
+				}
+			});
+        }
+
+        function ClockOut() {
+
+			var webMethod = "ProjectServices.asmx/ClockOut"
+			var parameters = "";
+
+			$.ajax({
+				type: "POST",
+				url: webMethod,
+				data: parameters,
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
+				success: function (msg) {
+					var responseFromServer = msg.d;
+					if (responseFromServer == true) {
+						document.getElementById("clockInBtn").style.display = "inline";
+				        document.getElementById("logOffBtn").style.display = "inline";
+                        document.getElementById("clockOutBtn").style.display = "none";
+                        document.getElementById("clockedinconfirm").style.display = "inline";
+					}
+					else {
+						alert("Unable to Clock out")
+					}
+				},
+				error: function (e) {
+					alert("this code will only execute if javascript is unable to access the webservice");
+				}
+			});
+        }
+	</script>
+	<!--END OF YOUR OWN JAVASCRIPT-->
+
+	<!--AND YOUR OWN CSS CAN GO HERE AS WELL-->
+	<style>
+
+	</style>
+	<!--END OF YOUR OWN CSS-->
+</head >
+<body>
+    <button id="logOffBtn" onclick="LogOff();">Log Off</button>
+    <button id="clockInBtn" onclick="ClockIn();">Clock In</button>
+    <button id="clockOutBtn" onclick="ClockOut();" style="display: none;">Clock Out</button>
+    <p id="clockedinconfirm" style="display:none;">You are clocked in!</p>
+</body>
+</html >

@@ -30,8 +30,31 @@
 		}
 
 		function LogOn() {
+			var id = document.getElementById("logonId").value;
+			var pass = document.getElementById("logonPass").value;
+
 			var webMethod = "ProjectServices.asmx/LogOn"
-			var parameters = ""
+			var parameters = "{\"uid\":\"" + encodeURI(id) + "\", \"pass\":\"" + encodeURI(pass) + "\"}";
+
+			$.ajax({
+				type: "POST",
+				url: webMethod,
+				data: parameters,
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
+				success: function (msg) {
+					var responseFromServer = msg.d;
+					if (responseFromServer == true) {
+						window.location.href = "portal.html";
+					}
+					else {
+						alert("Bad Credentials")
+					}
+				},
+				error: function (e) {
+					alert("this code will only execute if javascript is unable to access the webservice");
+				}
+			});
 		}
 	</script>
 	<!--END OF YOUR OWN JAVASCRIPT-->
@@ -47,10 +70,10 @@
 
 	<div class="container"> <!--This is the username and password input boxes!-->
 		<label for="username"><b>Username</b></label>
-		<input type="text" placeholder="Enter Username" name="username" required/>
+		<input type="text" id="logonId" placeholder="Enter Username" name="username" required/>
 		
 		<label for="pass"><b>Password</b></label>
-		<input type="text" placeholder="Enter Password" name="pass" required/>
+		<input type="text" id="logonPass" placeholder="Enter Password" name="pass" required/>
 
 	</div>
 
