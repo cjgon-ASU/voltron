@@ -32,7 +32,7 @@
 		function LogOff() {
 
 			var webMethod = "ProjectServices.asmx/LogOff"
-			var parameters = "";
+			var parameters = "{}";
 
 			$.ajax({
 				type: "POST",
@@ -56,7 +56,7 @@
         function ClockIn() {
 
 			var webMethod = "ProjectServices.asmx/ClockIn"
-			var parameters = "";
+			var parameters = "{}";
 
 			$.ajax({
 				type: "POST",
@@ -99,7 +99,7 @@
 						document.getElementById("clockInBtn").style.display = "inline";
 				        document.getElementById("logOffBtn").style.display = "inline";
                         document.getElementById("clockOutBtn").style.display = "none";
-                        document.getElementById("clockedinconfirm").style.display = "inline";
+                        document.getElementById("clockedinconfirm").style.display = "none";
 					}
 					else {
 						alert("Unable to Clock out")

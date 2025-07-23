@@ -33,8 +33,8 @@
 			var id = document.getElementById("logonId").value;
 			var pass = document.getElementById("logonPass").value;
 
-			var webMethod = "/logon";
-var parameters = JSON.stringify({ uid: id, pass: pass });
+			var webMethod = "ProjectServices.asmx/LogOn";
+            var parameters = JSON.stringify({ uid: id, pass: pass });
 
 			$.ajax({
 				type: "POST",
