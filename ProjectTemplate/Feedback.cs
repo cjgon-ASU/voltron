@@ -5,14 +5,16 @@ using System.Web;
 
 namespace ProjectTemplate
 {
-    public class Question
+    public class Feedback
     {
+        public int feedback_id;
         public int question_id;
+        public int? empid;
+        public int department;
         public string category;
-        public string question_text;
         public int? score;
-        public int is_active;
-        public DateTime created_at;
-        public DateTime last_shown_at;
+        public string feedback_text;
+        public DateTime feedback_time;
+        
     }
 }
