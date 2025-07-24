@@ -1,11 +1,12 @@
-﻿using System;
+﻿using MySql.Data;
+using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Security.Principal;
 using System.Web;
 using System.Web.Services;
-using MySql.Data;
-using MySql.Data.MySqlClient;
-using System.Data;
 
 namespace ProjectTemplate
 {
@@ -63,7 +64,7 @@ namespace ProjectTemplate
 			}
 		}
 
-
+        // This method allows a user to log on
         [WebMethod(EnableSession = true)]
         public bool LogOn(string uid, string pass)
         {
@@ -125,7 +126,8 @@ namespace ProjectTemplate
 
 
         }
-
+        
+        // This method allows a user to log off
         [WebMethod(EnableSession = true)]
         public bool LogOff()
         {
@@ -135,7 +137,7 @@ namespace ProjectTemplate
             Session.Abandon();
             return true;
         }
-
+        
         //This method returns the current login information of the user
         [WebMethod(EnableSession = true)]
         public string LoginInfo()
@@ -162,7 +164,7 @@ namespace ProjectTemplate
                 return "No user is currently logged in.";
             }
         }
-
+        
         // This method allows a user to clock in
         [WebMethod(EnableSession = true)]
         public string ClockIn()
@@ -220,6 +222,7 @@ namespace ProjectTemplate
                 return "Error: Failed to record timelogs table).";
             }
         }
+       
         // This method allows a user to clock out
         [WebMethod(EnableSession = true)]
         public string ClockOut()
@@ -282,55 +285,206 @@ namespace ProjectTemplate
                 return "Error: No clock in record found to clock out from.";
             }
         }
+        
+        // This method retrieves all users currently clocked in
         [WebMethod(EnableSession = true)]
-        public List<string> ClockedInUsers()
+        public User[] GetClockedInUsers()
         {
-            //admin session check
+            //check out the return type.  It's an array of Account objects.  You can look at our custom Account class in this solution to see that it's 
+            //just a container for public class-level variables.  It's a simple container that asp.net will have no trouble converting into json.  When we return
+            //sets of information, it's a good idea to create a custom container class to represent instances (or rows) of that information, and then return an array of those objects.  
+            //Keeps everything simple.
+
+            //admin check
             if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
             {
-               
-                return new List<string> { "Error: You must be an administrator to view this list." };
+                //if not an admin, return an empty array of User objects.
+                return new User[0];
             }
+          
 
-            List<string> clockedInUsers = new List<string>();
+
+            //LOGIC: get all the active users and return them!
+            DataTable sqlDt = new DataTable("users");
+
             string sqlConnectString = getConString();
-
-            string sqlQuery = "SELECT users.username, timelogs.clock_in " +
-                              "FROM users " +
-                              "INNER JOIN timelogs ON users.empid = timelogs.empid " +
-                              "WHERE users.is_clocked_in = 1 AND timelogs.clock_out IS NULL " +
-                              "ORDER BY timelogs.clock_in ASC";
+            string sqlSelect = "select empid, username, fname, lname, department from users where is_clocked_in = 1 order by lname";
 
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
-            MySqlCommand sqlCommand = new MySqlCommand(sqlQuery, sqlConnection);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+            //gonna use this to fill a data table
+            MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+            //filling the data table
+            sqlConnection.Open();
+            sqlDa.Fill(sqlDt);
+
+            //loop through each row in the dataset, creating instances
+            //of our container class Account.  Fill each acciount with
+            //data from the rows, then dump them in a list.
+            List<User> accounts = new List<User>();
+            for (int i = 0; i < sqlDt.Rows.Count; i++)
+            {
+                accounts.Add(new User
+                {
+                    empid = Convert.ToInt32(sqlDt.Rows[i]["empid"]),
+                    username = sqlDt.Rows[i]["username"].ToString(),
+                    fname = sqlDt.Rows[i]["fname"].ToString(),
+                    lname = sqlDt.Rows[i]["lname"].ToString(),
+                    department = sqlDt.Rows[i]["department"].ToString()
+                });
+            }
+            //convert the list of accounts to an array and return!
+            return accounts.ToArray();
+        }
+       
+        // This method allows an admin to remove a user
+        [WebMethod(EnableSession = true)]
+        public string RemoveUser(string username)
+        {
+            string sqlConnectString = getConString();
+
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                return "Error: You must be an administrator to remove users.";
+            }
+
+            //this deletes user from database table
+            string sqlDelete = "DELETE FROM users WHERE username = @username";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlDelete, sqlConnection);
 
             try
             {
+                sqlCommand.Parameters.AddWithValue("@username", HttpUtility.UrlDecode(username));
+
                 sqlConnection.Open();
-                MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
-                DataTable sqlDt = new DataTable();
-                sqlDa.Fill(sqlDt);
+                int rowsAffected = sqlCommand.ExecuteNonQuery();
 
-                //loop to add usernames to the list
-                foreach (DataRow row in sqlDt.Rows)
+                if (rowsAffected > 0)
                 {
-                    string username = row["username"].ToString();
-                    string clockInTime = Convert.ToDateTime(row["clock_in"]).ToString("yyyy-MM-dd HH:mm:ss");
-                    clockedInUsers.Add($"{username} (Clocked in at {clockInTime})");
+                    return $"User '{username}' removed successfully.";
                 }
-
+                else
+                {
+                    return $"Error: User '{username}' not found or could not be removed.";
+                }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                return new List<string> { "An error occurred while fetching the list of clocked in users." };
+                return "Error: Cound not remove user.";
             }
 
-            if (clockedInUsers.Count == 0)
+        }
+       
+        // This method allows admin to retrieve all users in the system        
+        [WebMethod(EnableSession = true)]
+        public User[] GetUsers()
+        {
+            //check out the return type.  It's an array of Account objects.  You can look at our custom Account class in this solution to see that it's 
+            //just a container for public class-level variables.  It's a simple container that asp.net will have no trouble converting into json.  When we return
+            //sets of information, it's a good idea to create a custom container class to represent instances (or rows) of that information, and then return an array of those objects.  
+            //Keeps everything simple.
+
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
             {
-                clockedInUsers.Add("No users currently clocked in.");
+                //if not an admin, return an empty array of User objects.
+                return new User[0];
+           }
+
+            //LOGIC: get all the active users and return them!
+            DataTable sqlDt = new DataTable("users");
+
+            string sqlConnectString = getConString();
+            string sqlSelect = "select empid, username, fname, lname, department from users  order by lname";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+            //gonna use this to fill a data table
+            MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+            //filling the data table
+            sqlConnection.Open();
+            sqlDa.Fill(sqlDt);
+
+            //loop through each row in the dataset, creating instances
+            //of our container class Account.  Fill each acciount with
+            //data from the rows, then dump them in a list.
+            List<User> accounts = new List<User>();
+            for (int i = 0; i < sqlDt.Rows.Count; i++)
+            {
+                accounts.Add(new User
+                {
+                    empid = Convert.ToInt32(sqlDt.Rows[i]["empid"]),
+                    username = sqlDt.Rows[i]["username"].ToString(),
+                    fname = sqlDt.Rows[i]["fname"].ToString(),
+                    lname = sqlDt.Rows[i]["lname"].ToString(),
+                    department = sqlDt.Rows[i]["department"].ToString()
+                });
+            }
+            //convert the list of accounts to an array and return!
+            return accounts.ToArray();
+        }
+       
+        // This method allows an admin to add a new user
+        [WebMethod(EnableSession = true)]
+        public string AddUser(string uid, string pass, string fname, string lname, string dept)
+        {
+            //admin check
+             if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+             {
+                return "Error: You must be an administrator to remove users.";
+             }
+
+            string sqlConnectString = getConString();
+            //the only thing fancy about this query is SELECT LAST_INSERT_ID() at the end.  All that
+            //does is tell mySql server to return the primary key of the last inserted row.
+            string sqlInsert = "insert into users (username, pass, fname, lname, department) " +
+                "values(@usernameValue, @passValue, @fnameValue, @lnameValue, @departmentValue); SELECT LAST_INSERT_ID();";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlInsert, sqlConnection);
+
+            sqlCommand.Parameters.AddWithValue("@usernameValue", HttpUtility.UrlDecode(uid));
+            sqlCommand.Parameters.AddWithValue("@passValue", HttpUtility.UrlDecode(pass));
+            sqlCommand.Parameters.AddWithValue("@fnameValue", HttpUtility.UrlDecode(fname));
+            sqlCommand.Parameters.AddWithValue("@lnameValue", HttpUtility.UrlDecode(lname));
+            sqlCommand.Parameters.AddWithValue("@departmentValue", HttpUtility.UrlDecode(dept));
+
+            //this time, we're not using a data adapter to fill a data table.  We're just
+            //opening the connection, telling our command to "executescalar" which says basically
+            //execute the query and just hand me back the number the query returns (the ID, remember?).
+            //don't forget to close the connection!
+            sqlConnection.Open();
+            //we're using a try/catch so that if the query errors out we can handle it gracefully
+            //by closing the connection and moving on
+            try
+            {
+                // Use ExecuteNonQuery() for INSERT, UPDATE, DELETE operations
+                // ExecuteScalar() is for when you expect a single value back (like LAST_INSERT_ID)
+                int rowsAffected = sqlCommand.ExecuteNonQuery();
+                sqlConnection.Close();
+                if (rowsAffected > 0)
+                {
+                    //success message
+                    return $"User '{uid}' added successfully.";
+                }
+                else
+                {
+                    //failed message
+                    return $"Error: Failed to add user '{uid}'.";
+                }
+            }
+            catch (Exception e)
+            { 
+                
+                return "Error: Unable to add user.";
             }
 
-            return clockedInUsers;
+            
         }
     }
 
