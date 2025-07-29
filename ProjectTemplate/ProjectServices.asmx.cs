@@ -166,7 +166,30 @@ namespace ProjectTemplate
                 return "No user is currently logged in.";
             }
         }
-        
+
+        //This method checks if logged in user is an admin or not
+        [WebMethod(EnableSession = true)]
+        public bool AdminCheck()
+        {
+            //Check if the username is stored in the session, indicating a logged in user
+            if (Session["loggedInUsername"] != null)
+            {
+                string username = Session["loggedInUsername"].ToString();
+                //string userInfo = $"Logged in as: {username}";
+
+                //Check if the user is an admin
+                if (Session["isAdmin"] != null && (bool)Session["isAdmin"] == true)
+                {
+                    username += " (Admin)";
+                }
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         // This method allows a user to clock in
         [WebMethod(EnableSession = true)]
         public bool ClockIn()
@@ -450,11 +473,11 @@ namespace ProjectTemplate
         public bool AddUser(string uid, string pass, string fname, string lname, string dept)
         {
             //admin check
-            // if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
-           //  {
+             if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+             {
                 //return "Error: You must be an administrator to remove users.";
-            //    return false;
-            // }
+                return false;
+             }
 
             string sqlConnectString = getConString();
             //the only thing fancy about this query is SELECT LAST_INSERT_ID() at the end.  All that
@@ -665,6 +688,54 @@ namespace ProjectTemplate
 
 
         }
+        // This method allows admin to retrieve all questions in the system        
+        [WebMethod(EnableSession = true)]
+        public Question[] GetAllQuestions()
+        {
+            //check out the return type.  It's an array of Question objects.  You can look at our custom Account class in this solution to see that it's 
+            //just a container for public class-level variables.  It's a simple container that asp.net will have no trouble converting into json.  When we return
+            //sets of information, it's a good idea to create a custom container class to represent instances (or rows) of that information, and then return an array of those objects.  
+            //Keeps everything simple.
+
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //if not an admin, return an empty array of User objects.
+                return new Question[0];
+            }
+
+            //LOGIC: get all the questions and return them!
+            DataTable sqlDt = new DataTable("users");
+
+            string sqlConnectString = getConString();
+            string sqlSelect = "select question_id, category, question_text from questions order by question_id asc";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+            //gonna use this to fill a data table
+            MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+            //filling the data table
+            sqlConnection.Open();
+            sqlDa.Fill(sqlDt);
+
+            //loop through each row in the dataset, creating instances
+            //of our container class Question.  Fill each question with
+            //data from the rows, then dump them in a list.
+            List<Question> questions = new List<Question>();
+            for (int i = 0; i < sqlDt.Rows.Count; i++)
+            {
+                questions.Add(new Question
+                {
+                    question_id = Convert.ToInt32(sqlDt.Rows[i]["question_id"]),
+                    category = sqlDt.Rows[i]["category"].ToString(),
+                    question_text = sqlDt.Rows[i]["question_text"].ToString(),
+                    
+                });
+            }
+            //convert the list of accounts to an array and return!
+            return questions.ToArray();
+        }
 
         // This method allows an admin to add a new question
         [WebMethod(EnableSession = true)]
@@ -831,6 +902,118 @@ namespace ProjectTemplate
                    return false;
             }
 
+        }
+
+        // This method allows admin to turns off a question
+        [WebMethod(EnableSession = true)]
+        public bool TurnOffQuestion(string qid)
+        {
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //return "Error: You must be an administrator to update questions.";
+                return false;
+            }
+
+            string sqlConnectString = getConString();
+            //this is a simple update, with parameters to pass in values
+            string sqlSelect = "update questions set is_active=0 " +
+                "where question_id=@questionValue";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+            sqlCommand.Parameters.AddWithValue("@questionValue", HttpUtility.UrlDecode(qid));
+
+
+            //this time, we're not using a data adapter to fill a data table.  We're just
+            //opening the connection, telling our command to "executescalar" which says basically
+            //execute the query and just hand me back the number the query returns (the ID, remember?).
+            //don't forget to close the connection!
+            sqlConnection.Open();
+            //we're using a try/catch so that if the query errors out we can handle it gracefully
+            //by closing the connection and moving on
+            try
+            {
+                // Use ExecuteNonQuery() for INSERT, UPDATE, DELETE operations
+                // ExecuteScalar() is for when you expect a single value back (like LAST_INSERT_ID)
+                int rowsAffected = sqlCommand.ExecuteNonQuery();
+                sqlConnection.Close();
+                if (rowsAffected > 0)
+                {
+                    //success message
+                    //return $"Question '{qid}' updated successfully.";
+                    return true;
+                }
+                else
+                {
+                    //failed message
+                    //return $"Error: Failed to update question '{qid}'.";
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+
+                //return "Error: Unable to update question.";
+                return false;
+            }
+        }
+
+        // This method allows admin to turns on a question
+        [WebMethod(EnableSession = true)]
+        public bool TurnOnQuestion(string qid)
+        {
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //return "Error: You must be an administrator to update questions.";
+                return false;
+            }
+
+            string sqlConnectString = getConString();
+            //this is a simple update, with parameters to pass in values
+            string sqlSelect = "update questions set is_active=1 " +
+                "where question_id=@questionValue";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+            sqlCommand.Parameters.AddWithValue("@questionValue", HttpUtility.UrlDecode(qid));
+
+
+            //this time, we're not using a data adapter to fill a data table.  We're just
+            //opening the connection, telling our command to "executescalar" which says basically
+            //execute the query and just hand me back the number the query returns (the ID, remember?).
+            //don't forget to close the connection!
+            sqlConnection.Open();
+            //we're using a try/catch so that if the query errors out we can handle it gracefully
+            //by closing the connection and moving on
+            try
+            {
+                // Use ExecuteNonQuery() for INSERT, UPDATE, DELETE operations
+                // ExecuteScalar() is for when you expect a single value back (like LAST_INSERT_ID)
+                int rowsAffected = sqlCommand.ExecuteNonQuery();
+                sqlConnection.Close();
+                if (rowsAffected > 0)
+                {
+                    //success message
+                    //return $"Question '{qid}' updated successfully.";
+                    return true;
+                }
+                else
+                {
+                    //failed message
+                    //return $"Error: Failed to update question '{qid}'.";
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+
+                //return "Error: Unable to update question.";
+                return false;
+            }
         }
     }
 
