@@ -99,7 +99,8 @@
 						document.getElementById("clockInBtn").style.display = "inline";
 				        document.getElementById("logOffBtn").style.display = "inline";
                         document.getElementById("clockOutBtn").style.display = "none";
-                        document.getElementById("clockedinconfirm").style.display = "none";
+						document.getElementById("clockedinconfirm").style.display = "none";
+						document.getElementById("emojiFeedbackModal").style.display = "block";
 					}
 					else {
 						alert("Unable to Clock out")
@@ -155,8 +156,60 @@
 			});
 		}
 
+		function SubmitEmojiFeedback(score) {
+            var qid = "";
+            var empid = "";
+            var dept = "";
+            var cat = "Stress";
+            var feedback = "";
 
+			var webMethod = "ProjectServices.asmx/SubmitFeedback";
+			var parameters = JSON.stringify({
+				qid: encodeURIComponent(qid),
+                empid: encodeURIComponent(empid),
+                dept: encodeURIComponent(dept),
+                cat: encodeURIComponent(cat),
+                score: encodeURIComponent(score),
+                feedback: encodeURIComponent(feedback)
+			})
 
+            var qid = "";
+            var empid = "";
+            var dept = "";
+            var cat = "Stress";
+            var feedback = "";
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    if (msg.d === true) {
+                        alert("Feedback Recieved. Thank you!");
+                    } else {
+                        alert("Feedback submission failed.");
+                    }
+                },
+                error: function (e) {
+                    alert("Could not submit feedback due to server error.");
+				}
+            });
+		}
+
+        document.addEventListener("DOMContentLoaded", function () {
+			document.querySelectorAll('.score-btn').forEach(button => {
+				button.addEventListener('click', function () {
+					const score = this.getAttribute('data-score');
+					SubmitEmojiFeedback(score);	
+				});
+			});
+
+			document.getElementById("closeModal").addEventListener("click", function () {
+				document.getElementById("emojiFeedbackModal").style.display = "none";
+			});
+		});
 	</script>
 	<!--END OF YOUR OWN JAVASCRIPT-->
 
@@ -190,6 +243,21 @@
 			<tbody id="userTableBody">
 			</tbody>
 		</table>
+	</div>
+
+	<div id="emojiFeedbackModal" class="modal" style="display: none;">
+		<div class="modal-content">
+			<button class="close" id="closeModal">X</button>
+			<h2>Rate Your Shift</h2>
+
+			<div id="scoreButtons">
+				<button class="score-btn" data-score="0" id="scorebutton1">😀</button>
+				<button class="score-btn" data-score="3" id="scorebutton2">😐</button>
+				<button class="score-btn" data-score="5" id="scorebutton3">🙁</button>
+				<button class="score-btn" data-score="8" id="scorebutton4">☹️</button>
+				<button class="score-btn" data-score="10"id="scorebutton5">😭</button>
+			</div>
+		</div>
 	</div>
 </body>
 </html >
