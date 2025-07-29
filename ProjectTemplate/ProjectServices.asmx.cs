@@ -623,12 +623,12 @@ namespace ProjectTemplate
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
             MySqlCommand sqlCommand = new MySqlCommand(sqlInsert, sqlConnection);
 
-            sqlCommand.Parameters.AddWithValue("@question_id", HttpUtility.UrlDecode(qid));
-            sqlCommand.Parameters.AddWithValue("@empid", HttpUtility.UrlDecode(empid));
-            sqlCommand.Parameters.AddWithValue("@department", HttpUtility.UrlDecode(dept));
-            sqlCommand.Parameters.AddWithValue("@category", HttpUtility.UrlDecode(cat));
-            sqlCommand.Parameters.AddWithValue("@score", HttpUtility.UrlDecode(score));
-            sqlCommand.Parameters.AddWithValue("@feedback_text", HttpUtility.UrlDecode(feedback));
+            sqlCommand.Parameters.AddWithValue("@question_id", string.IsNullOrWhiteSpace(qid) ? (object)DBNull.Value : (object)HttpUtility.UrlDecode(qid));
+            sqlCommand.Parameters.AddWithValue("@empid", string.IsNullOrWhiteSpace(empid) ? (object)DBNull.Value : (object)HttpUtility.UrlDecode(empid));
+            sqlCommand.Parameters.AddWithValue("@department", string.IsNullOrWhiteSpace(dept) ? (object)DBNull.Value : (object)HttpUtility.UrlDecode(dept));
+            sqlCommand.Parameters.AddWithValue("@category", string.IsNullOrWhiteSpace(cat) ? (object)DBNull.Value : (object)HttpUtility.UrlDecode(cat));
+            sqlCommand.Parameters.AddWithValue("@score", string.IsNullOrWhiteSpace(score) ? (object)DBNull.Value : (object)HttpUtility.UrlDecode(score));
+            sqlCommand.Parameters.AddWithValue("@feedback_text", string.IsNullOrWhiteSpace(feedback) ? (object)DBNull.Value : (object)HttpUtility.UrlDecode(feedback));
 
             //this time, we're not using a data adapter to fill a data table.  We're just
             //opening the connection, telling our command to "executescalar" which says basically
