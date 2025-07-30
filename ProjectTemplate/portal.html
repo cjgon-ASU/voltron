@@ -210,6 +210,53 @@
 				document.getElementById("emojiFeedbackModal").style.display = "none";
 			});
 		});
+
+		function openAnonFeedback() {
+			document.getElementById("submitAnonymousFeedback").style.display = "block";
+		}
+
+		document.getElementById("closeAnonModal").onclick = function () {
+			document.getElementById("submitAnonymousFeedback").style.display = "none";
+		}
+
+        function submitAnonFeedback() {
+            var feedback = document.getElementById("feedbackText").value.trim();
+
+            if (!feedback) {
+                alert("Please enter your feedback before submitting.");
+                return;
+            }
+
+            var webMethod = "ProjectServices.asmx/SubmitFeedback";
+            var parameters = JSON.stringify({
+                qid: "",
+                empid: "",
+                dept: "",
+                cat: "Anonymous",
+                score: "",
+                feedback: encodeURIComponent(feedback)
+            });
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    if (msg.d === true) {
+                        alert("Anonymous feedback submitted. Thank you!");
+                        document.getElementById("feedbackText").value = "";
+                        document.getElementById("submitAnonymousFeedback").style.display = "none";
+                    } else {
+                        alert("Anonymous feedback submission failed.");
+                    }
+                },
+                error: function () {
+                    alert("Server error while submitting feedback.");
+                }
+            });
+        }
 	</script>
 	<!--END OF YOUR OWN JAVASCRIPT-->
 
@@ -255,11 +302,25 @@
 				<button class="score-btn" data-score="3" id="scorebutton2">😐</button>
 				<button class="score-btn" data-score="5" id="scorebutton3">🙁</button>
 				<button class="score-btn" data-score="8" id="scorebutton4">☹️</button>
-				<button class="score-btn" data-score="10"id="scorebutton5">😭</button>
+				<button class="score-btn" data-score="10" id="scorebutton5">😭</button>
 			</div>
 			<div id="feedbackSavedMsg" style="color: green; margin-top: 10px; display: none;">
-  Feedback saved!
-</div>
+				Feedback saved!
+			</div>
+		</div>
+	</div>
+
+	<button onclick="openAnonFeedback()">Submit Anonymous Feedback</button>
+
+	<div id="submitAnonymousFeedback" class="modal" style="display: none;">
+		<div class="modal-content">
+			<button class="close" id="closeAnonModal">X</button>
+			<h2>Anonymous Feedback</h2>
+
+			<div id="anonymousFeedback">
+				<textarea id="feedbackText" placeholder="Write your feedback here!"></textarea>
+				<button onclick="submitAnonFeedback()">Submit</button>
+			</div>
 		</div>
 	</div>
 </body>
