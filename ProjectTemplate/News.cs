@@ -5,6 +5,7 @@ using System.Web;
 
 namespace ProjectTemplate
 {
+    
     public class News
     {
         public int news_id;
