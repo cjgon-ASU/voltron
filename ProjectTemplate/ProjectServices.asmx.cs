@@ -12,59 +12,60 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace ProjectTemplate
 {
-	[WebService(Namespace = "http://tempuri.org/")]
-	[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
-	[System.ComponentModel.ToolboxItem(false)]
-	[System.Web.Script.Services.ScriptService]
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [System.ComponentModel.ToolboxItem(false)]
+    [System.Web.Script.Services.ScriptService]
 
-	public class ProjectServices : System.Web.Services.WebService
-	{
-		////////////////////////////////////////////////////////////////////////
-		///replace the values of these variables with your database credentials
-		////////////////////////////////////////////////////////////////////////
-		private string dbID = "cis440summer2025team5";
-		private string dbPass = "cis440summer2025team5";
-		private string dbName = "cis440summer2025team5";
-		////////////////////////////////////////////////////////////////////////
-		
-		////////////////////////////////////////////////////////////////////////
-		///call this method anywhere that you need the connection string!
-		////////////////////////////////////////////////////////////////////////
-		private string getConString() {
-			return "SERVER=107.180.1.16; PORT=3306; DATABASE=" + dbName+"; UID=" + dbID + "; PASSWORD=" + dbPass;
-		}
-		////////////////////////////////////////////////////////////////////////
+    public class ProjectServices : System.Web.Services.WebService
+    {
+        ////////////////////////////////////////////////////////////////////////
+        ///replace the values of these variables with your database credentials
+        ////////////////////////////////////////////////////////////////////////
+        private string dbID = "cis440summer2025team5";
+        private string dbPass = "cis440summer2025team5";
+        private string dbName = "cis440summer2025team5";
+        ////////////////////////////////////////////////////////////////////////
+
+        ////////////////////////////////////////////////////////////////////////
+        ///call this method anywhere that you need the connection string!
+        ////////////////////////////////////////////////////////////////////////
+        private string getConString()
+        {
+            return "SERVER=107.180.1.16; PORT=3306; DATABASE=" + dbName + "; UID=" + dbID + "; PASSWORD=" + dbPass;
+        }
+        ////////////////////////////////////////////////////////////////////////
 
 
 
-		/////////////////////////////////////////////////////////////////////////
-		//don't forget to include this decoration above each method that you want
-		//to be exposed as a web service!
-		[WebMethod(EnableSession = true)]
-		/////////////////////////////////////////////////////////////////////////
-		public string TestConnection()
-		{
-			try
-			{
-				string testQuery = "select * from users";
+        /////////////////////////////////////////////////////////////////////////
+        //don't forget to include this decoration above each method that you want
+        //to be exposed as a web service!
+        [WebMethod(EnableSession = true)]
+        /////////////////////////////////////////////////////////////////////////
+        public string TestConnection()
+        {
+            try
+            {
+                string testQuery = "select * from users";
 
-				////////////////////////////////////////////////////////////////////////
-				///here's an example of using the getConString method!
-				////////////////////////////////////////////////////////////////////////
-				MySqlConnection con = new MySqlConnection(getConString());
-				////////////////////////////////////////////////////////////////////////
+                ////////////////////////////////////////////////////////////////////////
+                ///here's an example of using the getConString method!
+                ////////////////////////////////////////////////////////////////////////
+                MySqlConnection con = new MySqlConnection(getConString());
+                ////////////////////////////////////////////////////////////////////////
 
-				MySqlCommand cmd = new MySqlCommand(testQuery, con);
-				MySqlDataAdapter adapter = new MySqlDataAdapter(cmd);
-				DataTable table = new DataTable();
-				adapter.Fill(table);
-				return "Success!";
-			}
-			catch (Exception e)
-			{
-				return "Something went wrong, please check your credentials and db name and try again.  Error: "+e.Message;
-			}
-		}
+                MySqlCommand cmd = new MySqlCommand(testQuery, con);
+                MySqlDataAdapter adapter = new MySqlDataAdapter(cmd);
+                DataTable table = new DataTable();
+                adapter.Fill(table);
+                return "Success!";
+            }
+            catch (Exception e)
+            {
+                return "Something went wrong, please check your credentials and db name and try again.  Error: " + e.Message;
+            }
+        }
 
         // This method allows a user to log on
         [WebMethod(EnableSession = true)]
@@ -114,13 +115,13 @@ namespace ProjectTemplate
                 string checkClockInSql = "SELECT COUNT(*) FROM timelogs WHERE empid = @empid AND clock_out IS NULL";
                 sqlConnection.Open();
                 MySqlCommand checkCmd = new MySqlCommand(checkClockInSql, sqlConnection);
-                
+
                 checkCmd.Parameters.AddWithValue("@empid", empId);
                 int openClockIn = Convert.ToInt32(checkCmd.ExecuteScalar());
 
                 //Set session status based on whether there's an open clock in record in the DB
                 Session["isClockedIn"] = (openClockIn > 0);
-                
+
                 success = true;
             }
             //return the result!
@@ -128,7 +129,7 @@ namespace ProjectTemplate
 
 
         }
-        
+
         // This method allows a user to log off
         [WebMethod(EnableSession = true)]
         public bool LogOff()
@@ -139,7 +140,7 @@ namespace ProjectTemplate
             Session.Abandon();
             return true;
         }
-        
+
         //This method returns the current login information of the user
         [WebMethod(EnableSession = true)]
         public string LoginInfo()
@@ -252,7 +253,7 @@ namespace ProjectTemplate
                 return false;
             }
         }
-       
+
         // This method allows a user to clock out
         [WebMethod(EnableSession = true)]
         public bool ClockOut()
@@ -280,7 +281,7 @@ namespace ProjectTemplate
             string sqlUpdateTimelog = "UPDATE timelogs SET clock_out = @clockOutTime " +
                                       "WHERE empid = @empid AND clock_out IS NULL " +
                                       "ORDER BY clock_in DESC LIMIT 1";
-            
+
             string sqlUpdateUserClockedOut = "UPDATE users SET is_clocked_in = 0 WHERE empid = @empid";
 
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
@@ -320,7 +321,7 @@ namespace ProjectTemplate
                 return false;
             }
         }
-        
+
         // This method retrieves all users currently clocked in
         [WebMethod(EnableSession = true)]
         public User[] GetClockedInUsers()
@@ -336,7 +337,7 @@ namespace ProjectTemplate
                 //if not an admin, return an empty array of User objects.
                 return new User[0];
             }
-          
+
 
 
             //LOGIC: get all the active users and return them!
@@ -372,7 +373,7 @@ namespace ProjectTemplate
             //convert the list of accounts to an array and return!
             return users.ToArray();
         }
-       
+
         // This method allows an admin to remove a user
         [WebMethod(EnableSession = true)]
         public bool RemoveUser(string username)
@@ -413,11 +414,11 @@ namespace ProjectTemplate
             catch (Exception e)
             {
                 //return "Error: Cound not remove user.";
-                return false;   
+                return false;
             }
 
         }
-       
+
         // This method allows admin to retrieve all users in the system        
         [WebMethod(EnableSession = true)]
         public User[] GetUsers()
@@ -432,7 +433,7 @@ namespace ProjectTemplate
             {
                 //if not an admin, return an empty array of User objects.
                 return new User[0];
-           }
+            }
 
             //LOGIC: get all the active users and return them!
             DataTable sqlDt = new DataTable("users");
@@ -467,17 +468,17 @@ namespace ProjectTemplate
             //convert the list of accounts to an array and return!
             return users.ToArray();
         }
-       
+
         // This method allows an admin to add a new user
         [WebMethod(EnableSession = true)]
         public bool AddUser(string uid, string pass, string fname, string lname, string dept)
         {
             //admin check
-             if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
-             {
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
                 //return "Error: You must be an administrator to remove users.";
                 return false;
-             }
+            }
 
             string sqlConnectString = getConString();
             //the only thing fancy about this query is SELECT LAST_INSERT_ID() at the end.  All that
@@ -527,11 +528,11 @@ namespace ProjectTemplate
                 return false;
             }
 
-            
+
         }
 
-        [WebMethod (EnableSession = true)]
-        public bool UpdateUser(string empid,string userid, string pass, string fname, string lname, string dept)
+        [WebMethod(EnableSession = true)]
+        public bool UpdateUser(string empid, string userid, string pass, string fname, string lname, string dept)
         {
             //admin check
             if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
@@ -542,7 +543,7 @@ namespace ProjectTemplate
 
             string sqlConnectString = getConString();
             //this is a simple update, with parameters to pass in values
-            
+
             string sqlSelect = @"update users set username = IF(@usernameValue = '', username, @usernameValue), pass = IF(@passValue = '', pass, @passValue), fname = IF(@fnameValue = '', fname, @fnameValue), " +
                    "lname = IF(@lnameValue = '', lname, @lnameValue), department = IF(@departmentValue = '', department, @departmentValue) where empid = @empidValue";
 
@@ -616,27 +617,27 @@ namespace ProjectTemplate
             sqlConnection.Open();
             sqlDa.Fill(sqlDt);
 
-            
-                DataRow row = sqlDt.Rows[0]; // Get the first (and only) row
 
-                // Create a single Question object directly
-                Question singleQuestion = new Question
-                {
-                    question_id = Convert.ToInt32(row["question_id"]),
-                    category = row["category"].ToString(),
-                    question_text = row["question_text"].ToString(),
-                };
+            DataRow row = sqlDt.Rows[0]; // Get the first (and only) row
 
-                // Return an array containing just this one question
-                return new Question[] { singleQuestion };
-           
+            // Create a single Question object directly
+            Question singleQuestion = new Question
+            {
+                question_id = Convert.ToInt32(row["question_id"]),
+                category = row["category"].ToString(),
+                question_text = row["question_text"].ToString(),
+            };
+
+            // Return an array containing just this one question
+            return new Question[] { singleQuestion };
+
         }
 
         // This method allows a user to submit feedback
         [WebMethod(EnableSession = true)]
         public bool SubmitFeedback(string qid, string empid, string dept, string cat, string score, string feedback)
         {
-          
+
             string sqlConnectString = getConString();
             //the only thing fancy about this query is SELECT LAST_INSERT_ID() at the end.  All that
             //does is tell mySql server to return the primary key of the last inserted row.
@@ -730,7 +731,7 @@ namespace ProjectTemplate
                     question_id = Convert.ToInt32(sqlDt.Rows[i]["question_id"]),
                     category = sqlDt.Rows[i]["category"].ToString(),
                     question_text = sqlDt.Rows[i]["question_text"].ToString(),
-                    
+
                 });
             }
             //convert the list of accounts to an array and return!
@@ -762,7 +763,7 @@ namespace ProjectTemplate
             sqlCommand.Parameters.AddWithValue("@textValue", HttpUtility.UrlDecode(text));
             //activeValue is expected to be a 1 for true and 0 for false
             sqlCommand.Parameters.AddWithValue("@activeValue", HttpUtility.UrlDecode(active));
-           
+
             //this time, we're not using a data adapter to fill a data table.  We're just
             //opening the connection, telling our command to "executescalar" which says basically
             //execute the query and just hand me back the number the query returns (the ID, remember?).
@@ -775,7 +776,7 @@ namespace ProjectTemplate
                 // Use ExecuteNonQuery() for INSERT, UPDATE, DELETE operations
                 // ExecuteScalar() is for when you expect a single value back (like LAST_INSERT_ID)
                 int rowsAffected = sqlCommand.ExecuteNonQuery();
-                
+
                 sqlConnection.Close();
                 if (rowsAffected > 0)
                 {
@@ -823,7 +824,7 @@ namespace ProjectTemplate
             sqlCommand.Parameters.AddWithValue("@catValue", HttpUtility.UrlDecode(cat));
             sqlCommand.Parameters.AddWithValue("@textValue", HttpUtility.UrlDecode(text));
             sqlCommand.Parameters.AddWithValue("@activeValue", HttpUtility.UrlDecode(active));
-            
+
 
             //this time, we're not using a data adapter to fill a data table.  We're just
             //opening the connection, telling our command to "executescalar" which says basically
@@ -898,8 +899,8 @@ namespace ProjectTemplate
             }
             catch (Exception e)
             {
-                   //return "Error: Cound not remove question.";
-                   return false;
+                //return "Error: Cound not remove question.";
+                return false;
             }
 
         }
@@ -1014,6 +1015,357 @@ namespace ProjectTemplate
                 //return "Error: Unable to update question.";
                 return false;
             }
+        }
+
+        // This method allows admin to add a news announcement
+        [WebMethod(EnableSession = true)]
+        public bool AddNews(string title, string content)
+        {
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //return "Error: You must be an administrator to update questions.";
+                return false;
+            }
+
+            string sqlConnectString = getConString();
+            //SQL for inserting data into the 'news' table
+            string sqlInsert = "insert into news (title, content, posted_at, is_active) " +
+                               "values (@titleValue, @contentValue, @postedAtValue, @isActiveValue)";
+
+            MySqlConnection sqlConnection = null;
+            MySqlCommand sqlCommand = null;
+
+            try
+            {
+                DateTime postedAt = DateTime.Now;
+                int isActive = 1;
+
+                sqlConnection = new MySqlConnection(sqlConnectString);
+                sqlConnection.Open();
+
+                sqlCommand = new MySqlCommand(sqlInsert, sqlConnection);
+                sqlCommand.Parameters.AddWithValue("@titleValue", title);
+                sqlCommand.Parameters.AddWithValue("@contentValue", content);
+                sqlCommand.Parameters.AddWithValue("@postedAtValue", postedAt);
+                sqlCommand.Parameters.AddWithValue("@isActiveValue", isActive);
+
+                int rowsAffected = sqlCommand.ExecuteNonQuery();
+
+                if (rowsAffected > 0)
+                {
+                    //return "News announcement added successfully.";
+                    return true;
+                }
+                else
+                {
+                    //return "Error: Failed to add news announcement.";
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                //return "An error occurred while adding the news announcement.";
+                return false;
+            }
+
+        }
+
+        // This method allows admin to update news announcements
+        [WebMethod(EnableSession = true)]
+        public bool UpdateNews(string nid, string title, string content)
+        {
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //return "Error: You must be an administrator to update news.";
+                return false;
+            }
+
+            string sqlConnectString = getConString();
+            //this is a simple update, with parameters to pass in values
+            string sqlUpdate = "update news set title=@titleValue, content=@contentValue " +
+                      "where news_id=@newsIdValue";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlUpdate, sqlConnection);
+
+            sqlCommand.Parameters.AddWithValue("@newsIdValue", nid);
+            sqlCommand.Parameters.AddWithValue("@titleValue", title);
+            sqlCommand.Parameters.AddWithValue("@contentValue", content);
+
+
+            //this time, we're not using a data adapter to fill a data table.  We're just
+            //opening the connection, telling our command to "executescalar" which says basically
+            //execute the query and just hand me back the number the query returns (the ID, remember?).
+            //don't forget to close the connection!
+            sqlConnection.Open();
+            //we're using a try/catch so that if the query errors out we can handle it gracefully
+            //by closing the connection and moving on
+            try
+            {
+                // Use ExecuteNonQuery() for INSERT, UPDATE, DELETE operations
+                // ExecuteScalar() is for when you expect a single value back (like LAST_INSERT_ID)
+                int rowsAffected = sqlCommand.ExecuteNonQuery();
+                sqlConnection.Close();
+                if (rowsAffected > 0)
+                {
+                    //success message
+                    //return $"News '{nid}' updated successfully.";
+                    return true;
+                }
+                else
+                {
+                    //failed message
+                    //return $"Error: Failed to update News '{nid}'.";
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+
+                //return "Error: Unable to update News.";
+                return false;
+            }
+
+        }
+
+        // This method allows admin to remove a news announcement
+        [WebMethod(EnableSession = true)]
+        public bool RemoveNews(string nid)
+        {
+            string sqlConnectString = getConString();
+
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //return "Error: You must be an administrator to delete news.";
+                return false;
+            }
+
+            //this deletes news from database table
+            string sqlDelete = "DELETE FROM news WHERE news_id=@newsValue";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlDelete, sqlConnection);
+
+            try
+            {
+                sqlCommand.Parameters.AddWithValue("@newsValue", HttpUtility.UrlDecode(nid));
+
+                sqlConnection.Open();
+                int rowsAffected = sqlCommand.ExecuteNonQuery();
+
+                if (rowsAffected > 0)
+                {
+                    //return $"Question '{qid}' removed successfully.";
+                    return true;
+                }
+                else
+                {
+                    //return $"Error: Question '{qid}' not found or could not be removed.";
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                //return "Error: Cound not remove question.";
+                return false;
+            }
+
+        }
+
+        // This method allows admin to turn off a news announcement
+        [WebMethod(EnableSession = true)]
+        public bool TurnOffNews(string nid)
+        {
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //return "Error: You must be an administrator to turn off news post.";
+                return false;
+            }
+
+            string sqlConnectString = getConString();
+            //this is a simple update, with parameters to pass in values
+            string sqlSelect = "update news set is_active=0 " +
+                "where news_id=@newsValue";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+            sqlCommand.Parameters.AddWithValue("@newsValue", HttpUtility.UrlDecode(nid));
+
+
+            //this time, we're not using a data adapter to fill a data table.  We're just
+            //opening the connection, telling our command to "executescalar" which says basically
+            //execute the query and just hand me back the number the query returns (the ID, remember?).
+            //don't forget to close the connection!
+            sqlConnection.Open();
+            //we're using a try/catch so that if the query errors out we can handle it gracefully
+            //by closing the connection and moving on
+            try
+            {
+                // Use ExecuteNonQuery() for INSERT, UPDATE, DELETE operations
+                // ExecuteScalar() is for when you expect a single value back (like LAST_INSERT_ID)
+                int rowsAffected = sqlCommand.ExecuteNonQuery();
+                sqlConnection.Close();
+                if (rowsAffected > 0)
+                {
+                    //success message
+                    //return $"News post '{nid}' removed successfully.";
+                    return true;
+                }
+                else
+                {
+                    //failed message
+                    //return $"Error: Failed to remove news post '{nid}'.";
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+
+                //return "Error: Unable to remove news post.";
+                return false;
+            }
+        }
+
+        // This method allows admin to turn on a news announcement
+        [WebMethod(EnableSession = true)]
+        public bool TurnOnNews(string nid)
+        {
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //return "Error: You must be an administrator to turn on news post.";
+                return false;
+            }
+
+            string sqlConnectString = getConString();
+            //this is a simple update, with parameters to pass in values
+            string sqlSelect = "update news set is_active=1 " +
+                "where news_id=@newsValue";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+            sqlCommand.Parameters.AddWithValue("@newsValue", HttpUtility.UrlDecode(nid));
+
+
+            //this time, we're not using a data adapter to fill a data table.  We're just
+            //opening the connection, telling our command to "executescalar" which says basically
+            //execute the query and just hand me back the number the query returns (the ID, remember?).
+            //don't forget to close the connection!
+            sqlConnection.Open();
+            //we're using a try/catch so that if the query errors out we can handle it gracefully
+            //by closing the connection and moving on
+            try
+            {
+                // Use ExecuteNonQuery() for INSERT, UPDATE, DELETE operations
+                // ExecuteScalar() is for when you expect a single value back (like LAST_INSERT_ID)
+                int rowsAffected = sqlCommand.ExecuteNonQuery();
+                sqlConnection.Close();
+                if (rowsAffected > 0)
+                {
+                    //success message
+                    //return $"News post '{nid}' activated successfully.";
+                    return true;
+                }
+                else
+                {
+                    //failed message
+                    //return $"Error: Failed to activate news post '{nid}'.";
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+
+                //return "Error: Unable to activate news post.";
+                return false;
+            }
+        }
+
+        // Fix the return type of GetAllNews to match the actual return type (News[] instead of Question[])
+        [WebMethod(EnableSession = true)]
+        public News[] GetAllNews()
+        {
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //if not an admin, return an empty array of News objects.
+                return new News[0];
+            }
+
+            //LOGIC: get all the news and return them!
+            DataTable sqlDt = new DataTable("news");
+
+            string sqlConnectString = getConString();
+            string sqlSelect = "select news_id, title, content, posted_at from news order by news_id asc";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+            //gonna use this to fill a data table
+            MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+            //filling the data table
+            sqlConnection.Open();
+            sqlDa.Fill(sqlDt);
+
+            //loop through each row in the dataset, creating instances
+            //of our container class News.  Fill each news with
+            //data from the rows, then dump them in a list.
+            List<News> news = new List<News>();
+            for (int i = 0; i < sqlDt.Rows.Count; i++)
+            {
+                news.Add(new News
+                {
+                    news_id = Convert.ToInt32(sqlDt.Rows[i]["news_id"]),
+                    title = sqlDt.Rows[i]["title"].ToString(),
+                    content = sqlDt.Rows[i]["content"].ToString(),
+                    posted_at = Convert.ToDateTime(sqlDt.Rows[i]["posted_at"]),
+                });
+            }
+            //convert the list of news to an array and return!
+            return news.ToArray();
+        }
+
+        [WebMethod(EnableSession = true)]
+        public News[] UserNews()
+        {
+
+            //LOGIC: get all the news for users and return them!
+            DataTable sqlDt = new DataTable("news");
+
+            string sqlConnectString = getConString();
+            string sqlSelect = "select title, content, posted_at from news order by news_id asc";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+            //gonna use this to fill a data table
+            MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+            //filling the data table
+            sqlConnection.Open();
+            sqlDa.Fill(sqlDt);
+
+            //loop through each row in the dataset, creating instances
+            //of our container class News.  Fill each news with
+            //data from the rows, then dump them in a list.
+            List<News> news = new List<News>();
+            for (int i = 0; i < sqlDt.Rows.Count; i++)
+            {
+                news.Add(new News
+                {
+                    //news_id = Convert.ToInt32(sqlDt.Rows[i]["news_id"]),
+                    title = sqlDt.Rows[i]["title"].ToString(),
+                    content = sqlDt.Rows[i]["content"].ToString(),
+                    posted_at = Convert.ToDateTime(sqlDt.Rows[i]["posted_at"]),
+                });
+            }
+            //convert the list of news to an array and return!
+            return news.ToArray();
         }
     }
 
