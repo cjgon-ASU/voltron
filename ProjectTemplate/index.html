@@ -3,31 +3,45 @@
 <head>
     <meta charset="utf-8" />
     <title></title>
-    <style>
+  <style>
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.6;
+    line-height: 1.4;
     padding: 20px;
     margin: 0;
   }
 
-  section, div, .container {
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-
-  h1, h2, h3 {
+  button:first-of-type {
     margin-bottom: 15px;
   }
 
-  p {
+  .container {
+    padding: 5px 0;
     margin-bottom: 10px;
   }
 
-  button, input, select, textarea {
+  label {
+    display: inline-block;
+    margin-right: 10px;
+    font-weight: bold;
+  }
+
+  input[type="text"] {
+    width: 200px;
+    padding: 8px;
+    margin-right: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .container + button {
     margin-top: 10px;
-    margin-bottom: 15px;
-    padding: 10px 15px;
+  }
+
+  button {
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
   }
 </style>
     <!--DO NOT FORGET THIS SCRIPT TAG SO YOU CAN USE JQUERY!!!!!-->
