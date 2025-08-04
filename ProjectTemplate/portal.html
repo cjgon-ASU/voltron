@@ -29,6 +29,30 @@
 			});
 		}
 
+        function AdminCheck() {
+            var webMethod = "ProjectServices.asmx/AdminCheck"
+            var parameters = ""
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    if (msg.d === true) {
+                        console.log("User is logged in as Admin.");
+                        alert("User is logged on as Admin.")
+                    }
+                    else alert("User does not have Admin privileges.");
+                },
+                error: function (e) {
+                    alert("Unable to check admin status.")
+                }
+            });
+        }
+
+
 		function LogOff() {
 
 			var webMethod = "ProjectServices.asmx/LogOff"
@@ -70,7 +94,7 @@
 						document.getElementById("clockInBtn").style.display = "none";
 				        document.getElementById("logOffBtn").style.display = "none";
                         document.getElementById("clockOutBtn").style.display = "inline";
-                        document.getElementById("clockedinconfirm").style.display = "inline";
+                        alert("You are clocked in.")
 					}
 					else {
 						alert("Unable to clock in")
@@ -99,7 +123,7 @@
 						document.getElementById("clockInBtn").style.display = "inline";
 				        document.getElementById("logOffBtn").style.display = "inline";
                         document.getElementById("clockOutBtn").style.display = "none";
-						document.getElementById("clockedinconfirm").style.display = "none";
+						alert("You have clocked out, please leave an Emoji, or some feedback to let us know how your shift went.")
 						document.getElementById("emojiFeedbackModal").style.display = "block";
 					}
 					else {
@@ -112,48 +136,48 @@
 			});
 		}
 
-		function GetClockedInUsers() {
+        function GetClockedInUsers() {
 
-			var webMethod = "ProjectServices.asmx/GetClockedInUsers"
-			var parameters = "{}";
+            var webMethod = "ProjectServices.asmx/GetClockedInUsers"
+            var parameters = "{}";
 
-			$.ajax({
-				type: "POST",
-				url: webMethod,
-				data: parameters,
-				contentType: "application/json; charset=utf-8",
-				dataType: "json",
-				success: function (msg) {
-					var users = msg.d;
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    var users = msg.d;
                     var wrapper = document.getElementById("userTableWrapper");
-					var tbody = document.getElementById("userTableBody");
-					tbody.innerHTML = "";
+                    var tbody = document.getElementById("userTableBody");
+                    tbody.innerHTML = "";
 
-					if (users.length === 0) {
-						tbody.innerHTML = "<tr><td colspan='5'>No users clocked in.</td></tr>";
-                        wrapper.style.display = "block";
-						return;
-					}
+                    if (users.length === 0) {
+                        alert("You are not an admin or no users are currently clocked in.");
+                        $("#userTableWrapper").hide();
+                        return;
+                    }
 
-					for (var i = 0; i < users.length; i++) {
-						var user = users[i];
-						var row = "<tr>" +
-							"<td>" + user.empid + "</td>" +
-							"<td>" + user.username + "</td>" +
-							"<td>" + user.fname + "</td>" +
-							"<td>" + user.lname + "</td>" +
-							"<td>" + user.department + "</td>" +
-							"</tr>";
-						tbody.innerHTML += row;
-					}
+                    for (var i = 0; i < users.length; i++) {
+                        var user = users[i];
+                        var row = "<tr>" +
+                            "<td>" + user.empid + "</td>" +
+                            "<td>" + user.username + "</td>" +
+                            "<td>" + user.fname + "</td>" +
+                            "<td>" + user.lname + "</td>" +
+                            "<td>" + user.department + "</td>" +
+                            "</tr>";
+                        tbody.innerHTML += row;
+                    }
 
                     wrapper.style.display = "block";
 
-				},
-				error: function (e) {
-					alert("this code will only execute if javascript is unable to access the webservice");
-				}
-			});
+                },
+                error: function (e) {
+                    alert("this code will only execute if javascript is unable to access the webservice");
+                }
+            });
 		}
 
 		function SubmitEmojiFeedback(score) {
@@ -199,17 +223,30 @@
 		}
 
         document.addEventListener("DOMContentLoaded", function () {
-			document.querySelectorAll('.score-btn').forEach(button => {
-				button.addEventListener('click', function () {
-					const score = this.getAttribute('data-score');
-					SubmitEmojiFeedback(score);	
-				});
-			});
+            document.querySelectorAll('.score-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const score = this.getAttribute('data-score');
+                    SubmitEmojiFeedback(score);
+                });
+            });
 
-			document.getElementById("closeModal").addEventListener("click", function () {
-				document.getElementById("emojiFeedbackModal").style.display = "none";
-			});
-		});
+            document.getElementById("closeModal").addEventListener("click", function () {
+                document.getElementById("emojiFeedbackModal").style.display = "none";
+            });
+
+            document.getElementById("closeAnonModal").addEventListener("click", function () {
+                document.getElementById("submitAnonymousFeedback").style.display = "none";
+            });
+
+            document.getElementById("closeClockedInUsersModal").addEventListener("click", function () {
+                document.getElementById("userTableWrapper").style.display = "none";
+            });
+
+            document.getElementById("closeGetUsersModal").addEventListener("click", function () {
+                document.getElementById("getUsersTableWrapper").style.display = "none";
+            });
+
+        });
 
 		function openAnonFeedback() {
 			document.getElementById("submitAnonymousFeedback").style.display = "block";
@@ -291,61 +328,99 @@
 	<!--END OF YOUR OWN CSS-->
 </head >
 <body>
-	<button id="logOffBtn" onclick="LogOff();">Log Off</button>
-	<button id="clockInBtn" onclick="ClockIn();">Clock In</button>
-	<button id="clockOutBtn" onclick="ClockOut();" style="display: none;">Clock Out</button>
-	<p id="clockedinconfirm" style="display:none;">You are clocked in!</p>
-
-	<button id="getClockedInUsersBtn" onclick="GetClockedInUsers();">Get Clocked In Users</button>
+    <button id="logOffBtn" onclick="LogOff();">Log Off</button>
+    <button id="clockInBtn" onclick="ClockIn();">Clock In</button>
+    <button id="clockOutBtn" onclick="ClockOut();" style="display: none;">Clock Out</button>
+    <p id="clockedinconfirm" style="display:none;">You are clocked in!</p>
 
 
-	<div id="userTableWrapper" style="display: none;">
-		<h3>Clocked In Users</h3>
-		<table id="userTable" border="1">
-			<thead>
-				<tr>
-					<th>EmpID</th>
-					<th>Username</th>
-					<th>First Name</th>
-					<th>Last Name</th>
-					<th>Department</th>
-				</tr>
-			</thead>
-			<tbody id="userTableBody">
-			</tbody>
-		</table>
-	</div>
+    
 
-	<div id="emojiFeedbackModal" class="modal" style="display: none">
-		<div class="modal-content">
-			<button class="close" id="closeModal" style="background-color: #f44336; font-size: 8; padding: 10px;">X</button>
-			<h2>Rate Your Shift</h2>
+    <div id="emojiFeedbackModal" class="modal" style="display: none">
+        <div class="modal-content">
+            <button class="close" id="closeModal" style="background-color: #f44336; font-size: 8; padding: 10px;">X</button>
+            <h2>Rate Your Shift</h2>
 
-			<div id="scoreButtons">
-				<button class="score-btn" data-score="0" id="scorebutton1" style="background-color: #0000FF;">😀</button>
-				<button class="score-btn" data-score="3" id="scorebutton2" style="background-color: #00FF00;">😐</button>
-				<button class="score-btn" data-score="5" id="scorebutton3" style="background-color: #808080;">🙁</button>
-				<button class="score-btn" data-score="8" id="scorebutton4" style="background-color: #FFFF00;">☹️</button>
-				<button class="score-btn" data-score="10" id="scorebutton5" style="background-color: #FF0000; ">😭</button>
-			</div>
-			<div id="feedbackSavedMsg" style="color: green; margin-top: 10px; display: none;">
-				Feedback saved!
-			</div>
-		</div>
-	</div>
+            <div id="scoreButtons">
+                <button class="score-btn" data-score="0" id="scorebutton1" style="background-color: #0000FF;">😀</button>
+                <button class="score-btn" data-score="3" id="scorebutton2" style="background-color: #00FF00;">😐</button>
+                <button class="score-btn" data-score="5" id="scorebutton3" style="background-color: #808080;">🙁</button>
+                <button class="score-btn" data-score="8" id="scorebutton4" style="background-color: #FFFF00;">☹️</button>
+                <button class="score-btn" data-score="10" id="scorebutton5" style="background-color: #FF0000; ">😭</button>
+            </div>
+            <div id="feedbackSavedMsg" style="color: green; margin-top: 10px; display: none;">
+                Feedback saved!
+            </div>
+        </div>
+    </div>
 
-	<button onclick="openAnonFeedback()">Submit Anonymous Feedback</button>
+    <button onclick="openAnonFeedback()">Submit Anonymous Feedback</button>
 
-	<div id="submitAnonymousFeedback" class="modal" style="display: none;">
-		<div class="modal-content">
-			<button class="close" id="closeAnonModal" style="background-color: #f44336; font-size: 8; padding: 10px;">X</button>
-			<h2>Anonymous Feedback</h2>
+    <div id="submitAnonymousFeedback" class="modal" style="display: none;">
+        <div class="modal-content">
+            <button class="close" id="closeAnonModal" style="background-color: #f44336; font-size: 8; padding: 10px;">X</button>
+            <h2>Anonymous Feedback</h2>
 
-			<div id="anonymousFeedback">
-				<textarea id="feedbackText" placeholder="Write your feedback here!"></textarea>
-				<button onclick="submitAnonFeedback()">Submit</button>
-			</div>
-		</div>
-	</div>
+            <div id="anonymousFeedback">
+                <textarea id="feedbackText" placeholder="Write your feedback here!"></textarea>
+                <button onclick="submitAnonFeedback()">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="Admin Tools">
+        <h1 style="font-size: 20px; text-decoration: underline;">Admin Tools</h1>
+
+        <h1 style="font-size: 16px;">General</h1>
+        <button id="getClockedInUsersBtn" onclick="GetClockedInUsers();">Get Clocked In Users</button>
+        <button id="adminCheck" onclick="AdminCheck()">Admin Check</button>
+
+
+        <div id="userTableWrapper" style="display: none;">
+            <button class="close" id="closeClockedInUsersModal" style="background-color: #f44336; font-size: 8; padding: 10px;">X</button>
+            <h3>Clocked In Users</h3>
+            <table id="userTable" border="1">
+                <thead>
+                    <tr>
+                        <th>EmpID</th>
+                        <th>Username</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Department</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                </tbody>
+            </table>
+        </div>
+
+
+        <h1 style="font-size: 16px;">User Management</h1>
+        <button id="getUsers" onclick="GetUsers();">Get Users</button>
+        <button id="addUsers" onclick="AddUsers();">Add Users</button>
+        <button id="removeUsers" onclick="RemoveUsers();">Remove Users</button>
+        <button id="editUsers" onclick="UpdateUsers();">Update Users</button>
+
+    </div>
+
+    <div id="getUsersTableWrapper" class="modal" style="display: none;">
+        <button class="close" id="closeGetUsersModal" style="background-color: #f44336; font-size: 8; padding: 10px;">X</button>
+        <h3>Clocked In Users</h3>
+        <table id="userTable" border="1">
+            <thead>
+                <tr>
+                    <th>EmpID</th>
+                    <th>Username</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Department</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+            </tbody>
+        </table>
+    </div>
+
+
 </body>
 </html >
