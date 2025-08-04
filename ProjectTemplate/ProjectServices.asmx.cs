@@ -1420,6 +1420,39 @@ namespace ProjectTemplate
             //convert the list of news to an array and return!
             return news.ToArray();
         }
+
+        // This method weekly hours worked for the logged in user
+        [WebMethod(EnableSession = true)]
+        public double WeeklyHours()
+        {
+            //check if the user is logged in
+            if (Session["id"] == null)
+            {
+                return 0.0;
+            }
+            //get employee ID from session
+            string empid = Session["id"].ToString();
+
+            //get the total seconds worked this week by subtracting clock_in from clock_out
+            string sqlConnectString = getConString();
+            string sqlSelect = "SELECT SUM(TIMESTAMPDIFF(SECOND, clock_in, clock_out)) AS total_seconds FROM timelogs " +
+            "WHERE empid = @empid AND YEARWEEK(clock_in) = YEARWEEK(CURDATE()) AND clock_out IS NOT NULL;";
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@empid", HttpUtility.UrlDecode(empid));
+            
+                sqlConnection.Open();
+                object seconds = sqlCommand.ExecuteScalar();
+                double totalHours = 0.0;
+                sqlConnection.Close();
+
+                //convert seconds worked to hours worked
+                double totalSeconds = Convert.ToDouble(seconds);
+                totalHours = totalSeconds / 3600.0;
+                return totalHours;
+                          
+                     
+        }
     }
 
 }
