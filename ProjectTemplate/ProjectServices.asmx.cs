@@ -191,6 +191,59 @@ namespace ProjectTemplate
             }
         }
 
+        // This method allows a user to clocked on
+        [WebMethod(EnableSession = true)]
+        public bool IsUserClockedIn()
+        {
+           
+            //we return this flag to tell them if they clocked in or not
+            bool clockedin = false;
+
+            //Check if user is logged in
+            if (Session["id"] == null)
+            {
+                //return "Error: You must be logged in to clock in.";
+                return false;
+            }
+
+            //get the empid from the session
+            int empId = Convert.ToInt32(Session["id"]);
+
+            //our connection string comes from our web.config file like we talked about earlier
+            string sqlConnectString = getConString();
+            //here's our query.  A basic select with nothing fancy.  Note the parameters that begin with @
+            string sqlSelect = "select count(*) from timelogs where empid = @empid AND clock_out IS NULL";
+
+            //set up our connection object to be ready to use our connection string
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            //set up our command object to use our connection, and our query
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+            // get empid from session to 
+            sqlCommand.Parameters.AddWithValue("@empid", empId);
+            sqlConnection.Open();
+            
+            //get the single value from the COUNT(*) query to see if the user is clocked in
+            object result = sqlCommand.ExecuteScalar();
+            int ClockCount = 0;
+
+            if (result != null && result != DBNull.Value)
+            {
+                ClockCount = Convert.ToInt32(result);
+            }
+
+            // If the count is greater than 0, the user is clocked in.
+            if (ClockCount > 0)
+            {
+                clockedin = true;
+            }
+            sqlConnection.Close();
+            //return the result!
+            return clockedin;
+
+
+        }
+
         // This method allows a user to clock in
         [WebMethod(EnableSession = true)]
         public bool ClockIn()
