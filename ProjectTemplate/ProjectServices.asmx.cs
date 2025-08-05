@@ -81,7 +81,7 @@ namespace ProjectTemplate
             //our connection string comes from our web.config file like we talked about earlier
             string sqlConnectString = getConString();
             //here's our query.  A basic select with nothing fancy.  Note the parameters that begin with @
-            string sqlSelect = "SELECT empid, username, is_admin FROM users WHERE username=@idValue and pass=@passValue";
+            string sqlSelect = "SELECT empid, username, department, is_admin FROM users WHERE username=@idValue and pass=@passValue";
 
             //set up our connection object to be ready to use our connection string
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
@@ -110,6 +110,7 @@ namespace ProjectTemplate
                 Session["id"] = empId;
                 Session["loggedInUsername"] = sqlDt.Rows[0]["username"].ToString();
                 Session["isAdmin"] = sqlDt.Rows[0]["is_admin"];
+                Session["department"] = sqlDt.Rows[0]["department"].ToString();
 
                 //Check if the user is clocked in, (to store in session)
                 string checkClockInSql = "SELECT COUNT(*) FROM timelogs WHERE empid = @empid AND clock_out IS NULL";
@@ -149,7 +150,10 @@ namespace ProjectTemplate
             if (Session["loggedInUsername"] != null)
             {
                 string username = Session["loggedInUsername"].ToString();
-                string userInfo = $"Logged in as: {username}";
+                string empId = Session["id"] != null ? Session["id"].ToString() : "Unknown ID";
+                string department = Session["department"] != null ? Session["department"].ToString() : "Unknown Department";
+                
+                string userInfo = $"Logged in as: {username} {empId} {department}";
 
                 //Check if admin status is stored and if the user is an admin
                 if (Session["isAdmin"] != null && (bool)Session["isAdmin"] == true)
@@ -689,8 +693,13 @@ namespace ProjectTemplate
 
         // This method allows a user to submit feedback
         [WebMethod(EnableSession = true)]
-        public bool SubmitFeedback(string qid, string empid, string dept, string cat, string score, string feedback)
+        public bool SubmitFeedback(string qid, string cat, string score, string feedback)
         {
+
+            // Get empid and dept from session instead of method parameter
+            string empid = Session["id"].ToString();
+            string dept = Session["department"] != null ? Session["department"].ToString() : string.Empty;
+
 
             string sqlConnectString = getConString();
             //the only thing fancy about this query is SELECT LAST_INSERT_ID() at the end.  All that
@@ -743,6 +752,7 @@ namespace ProjectTemplate
 
 
         }
+
         // This method allows admin to retrieve all questions in the system        
         [WebMethod(EnableSession = true)]
         public Question[] GetAllQuestions()
@@ -1493,6 +1503,94 @@ namespace ProjectTemplate
                 return "Error: Unable to retrieve department.";
             }
         }
+
+        // This method retrieves all the feedback that exists in the database (MINUS the empid)
+        [WebMethod(EnableSession = true)]
+        public Feedback[] GetAllFeedback()
+        {
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //if not an admin, return an empty array of Feedback objects.
+                return new Feedback[0];
+            }
+            //LOGIC: get all the feedback and return them!
+            DataTable sqlDt = new DataTable("feedback");
+            string sqlConnectString = getConString();
+            string sqlSelect = "select feedback_id, question_id, department, category, score, feedback_text, feedback_time from feedback order by feedback_id asc";
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+            //gonna use this to fill a data table
+            MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+            //filling the data table
+            sqlConnection.Open();
+            sqlDa.Fill(sqlDt);
+            //loop through each row in the dataset, creating instances
+            //of our container class Feedback.  Fill each feedback with
+            //data from the rows, then dump them in a list.
+            List<Feedback> feedbackList = new List<Feedback>();
+            foreach (DataRow row in sqlDt.Rows)
+            {
+                feedbackList.Add(new Feedback
+                {
+                    feedback_id = row["feedback_id"] != DBNull.Value ? Convert.ToInt32(row["feedback_id"]) : 0,
+                    question_id = row["question_id"] != DBNull.Value ? Convert.ToInt32(row["question_id"]) : 0,
+                    department = row["department"] != DBNull.Value ? row["department"].ToString() : null,
+                    category = row["category"] != DBNull.Value ? row["category"].ToString() : null,
+                    score = row["score"] != DBNull.Value ? Convert.ToInt32(row["score"]) : (int?)null,
+                    feedback_text = row["feedback_text"] != DBNull.Value ? row["feedback_text"].ToString() : null,
+                    feedback_time = (DateTime)(row["feedback_time"] != DBNull.Value ? Convert.ToDateTime(row["feedback_time"]) : (DateTime?)null)
+                });
+            }
+            //convert the list of feedback to an array and return!
+            return feedbackList.ToArray();
+        }
+
+        // This method allows the logged in user to view their own feedback
+        [WebMethod(EnableSession = true)]
+        public Feedback[] GetUserFeedback()
+        {
+            //check if the user is logged in
+            if (Session["id"] == null)
+            {
+                return new Feedback[0];
+            }
+            //get employee ID from session
+            string empid = Session["id"].ToString();
+            //LOGIC: get all the feedback for the logged in user and return them!
+            DataTable sqlDt = new DataTable("feedback");
+            string sqlConnectString = getConString();
+            string sqlSelect = "select feedback_id, question_id, empid, department, category, score, feedback_text, feedback_time from feedback where empid=@empid order by feedback_id asc";
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@empid", HttpUtility.UrlDecode(empid));
+            //gonna use this to fill a data table
+            MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+            //filling the data table
+            sqlConnection.Open();
+            sqlDa.Fill(sqlDt);
+            //loop through each row in the dataset, creating instances
+            //of our container class Feedback.  Fill each feedback with
+            //data from the rows, then dump them in a list.
+            List<Feedback> feedbackList = new List<Feedback>();
+            foreach (DataRow row in sqlDt.Rows)
+            {
+                feedbackList.Add(new Feedback
+                {
+                    feedback_id = row["feedback_id"] != DBNull.Value ? Convert.ToInt32(row["feedback_id"]) : 0,
+                    question_id = row["question_id"] != DBNull.Value ? Convert.ToInt32(row["question_id"]) : 0,
+                    empid = row["empid"] != DBNull.Value ? Convert.ToInt32(row["empid"]) : (int?)null,
+                    department = row["department"] != DBNull.Value ? row["department"].ToString() : null,
+                    category = row["category"] != DBNull.Value ? row["category"].ToString() : null,
+                    score = row["score"] != DBNull.Value ? Convert.ToInt32(row["score"]) : (int?)null,
+                    feedback_text = row["feedback_text"] != DBNull.Value ? row["feedback_text"].ToString() : null,
+                    feedback_time = (DateTime)(row["feedback_time"] != DBNull.Value ? Convert.ToDateTime(row["feedback_time"]) : (DateTime?)null)
+                });
+            }
+            //convert the list of feedback to an array and return!
+            return feedbackList.ToArray();
+        }
+
     }
 
 }
