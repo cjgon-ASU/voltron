@@ -175,10 +175,164 @@
 
                 },
                 error: function (e) {
-                    alert("this code will only execute if javascript is unable to access the webservice");
+                    alert("This code will only execute if javascript is unable to access the webservice.");
                 }
             });
-		}
+        }
+
+        function GetUsers() {
+            var webMethod = "ProjectServices.asmx/GetUsers"
+            var parameters = "{}";
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    var users = msg.d;
+                    var wrapper = document.getElementById("getUsersTableWrapper");
+                    var tbody = document.getElementById("getUsersTableBody");
+                    tbody.innerHTML = "";
+
+                    if (users.length === 0) {
+                        alert("You are not an admin or no users are currently clocked in.");
+                        $("#getUsersTableWrapper").hide();
+                        return;
+                    }
+
+                    for (var i = 0; i < users.length; i++) {
+                        var user = users[i];
+                        var row = "<tr>" +
+                            "<td>" + user.empid + "</td>" +
+                            "<td>" + user.username + "</td>" +
+                            "<td>" + user.fname + "</td>" +
+                            "<td>" + user.lname + "</td>" +
+                            "<td>" + user.department + "</td>" +
+                            "</tr>";
+                        tbody.innerHTML += row;
+                    }
+
+                    wrapper.style.display = "block";
+
+                },
+                error: function (e) {
+                    alert("This code will only execute if javascript is unable to access the webservice.")
+                }
+            })
+        }
+
+        function AddUser() {
+            var uid = $("#addUid").val().trim();
+            var pass = $("#addPass").val().trim();
+            var fname = $("#addFname").val().trim();
+            var lname = $("#addLname").val().trim();
+            var dept = $("#addDept").val().trim();
+            var webMethod = "ProjectServices.asmx/AddUser"
+            var parameters = JSON.stringify({
+                uid: encodeURIComponent(uid),
+                pass: encodeURIComponent(pass),
+                fname: encodeURIComponent(fname),
+                lname: encodeURIComponent(lname),
+                dept: encodeURIComponent(dept)
+            })
+
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.d === true) {
+                        alert("User added successfully!");
+                        $("#addUsersWrapper").hide();
+                        $("#addUid, #addPass, #addFname, #addLname, #addDept").val("");
+                    } else {
+                        alert("Failed to add user.");
+                    }
+                },
+                error: function (e) {
+                    alert("An error occurred while adding the user.");
+                }
+            });
+        }
+
+        function RemoveUser() {
+            var uid = $("#removeUid").val().trim();
+
+            if (uid === "") {
+                alert("Please enter a username to remove.");
+                return;
+            }
+
+            var webMethod = "ProjectServices.asmx/RemoveUser";
+            var parameters = JSON.stringify({
+                username: encodeURIComponent(uid)
+            });
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.d === true) {
+                        alert("User removed successfully!");
+                        $("#removeUid").val("");
+                    } else {
+                        alert("Failed to remove user. Make sure the username exists.");
+                    }
+                },
+                error: function () {
+                    alert("An error occurred while removing the user.");
+                }
+            });
+        }
+
+        function UpdateUser() {
+            var empid = $("#updateEmpId").val().trim();
+            var userid = $("#updateUid").val().trim();
+            var pass = $("#updatePass").val().trim();
+            var fname = $("#updateFname").val().trim();
+            var lname = $("#updateLname").val().trim();
+            var dept = $("#updateDept").val().trim();
+
+            var webMethod = "ProjectServices.asmx/UpdateUser";
+            var parameters = JSON.stringify({
+                empid: encodeURIComponent(empid),
+                userid: encodeURIComponent(userid),
+                pass: encodeURIComponent(pass),
+                fname: encodeURIComponent(fname),
+                lname: encodeURIComponent(lname),
+                dept: encodeURIComponent(dept)
+            });
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.d === true) {
+                        alert("User updated successfully!");
+                        $("#updateEmpId, #updateUid, #updatePass, #updateFname, #updateLname, #updateDept").val("");
+                    } else {
+                        alert("Failed to update user. Please check the Employee ID and try again.");
+                    }
+                },
+                error: function () {
+                    alert("An error occurred while updating the user. Please make sure every value is filled.");
+                }
+            });
+        }
+
+  
+
 
 		function SubmitEmojiFeedback(score) {
             var qid = "";
@@ -246,15 +400,35 @@
                 document.getElementById("getUsersTableWrapper").style.display = "none";
             });
 
+            document.getElementById("closeAddUsersModal").addEventListener("click", function () {
+                document.getElementById("addUsersWrapper").style.display = "none";
+            });
+
+            document.getElementById("closeRemoveUsersModal").addEventListener("click", function () {
+                document.getElementById("removeUsersWrapper").style.display = "none";
+            });
+
+            document.getElementById("closeUpdateUsersModal").addEventListener("click", function () {
+                document.getElementById("updateUsersWrapper").style.display = "none";
+            });
         });
 
 		function openAnonFeedback() {
 			document.getElementById("submitAnonymousFeedback").style.display = "block";
-		}
+        }
 
-		document.getElementById("closeAnonModal").onclick = function () {
-			document.getElementById("submitAnonymousFeedback").style.display = "none";
-		}
+        function openAddUsers() {
+            document.getElementById("addUsersWrapper").style.display = "block";
+        }
+
+        function openRemoveUsers() {
+            document.getElementById("removeUsersWrapper").style.display = "block";
+        }
+
+        function openUpdateUsers() {
+            document.getElementById("updateUsersWrapper").style.display = "block";
+        }
+
 
         function submitAnonFeedback() {
             var feedback = document.getElementById("feedbackText").value.trim();
@@ -338,7 +512,7 @@
 
     <div id="emojiFeedbackModal" class="modal" style="display: none">
         <div class="modal-content">
-            <button class="close" id="closeModal" style="background-color: #f44336; font-size: 8; padding: 10px;">X</button>
+            <button class="close" id="closeModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
             <h2>Rate Your Shift</h2>
 
             <div id="scoreButtons">
@@ -358,7 +532,7 @@
 
     <div id="submitAnonymousFeedback" class="modal" style="display: none;">
         <div class="modal-content">
-            <button class="close" id="closeAnonModal" style="background-color: #f44336; font-size: 8; padding: 10px;">X</button>
+            <button class="close" id="closeAnonModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
             <h2>Anonymous Feedback</h2>
 
             <div id="anonymousFeedback">
@@ -377,7 +551,7 @@
 
 
         <div id="userTableWrapper" style="display: none;">
-            <button class="close" id="closeClockedInUsersModal" style="background-color: #f44336; font-size: 8; padding: 10px;">X</button>
+            <button class="close" id="closeClockedInUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
             <h3>Clocked In Users</h3>
             <table id="userTable" border="1">
                 <thead>
@@ -397,15 +571,16 @@
 
         <h1 style="font-size: 16px;">User Management</h1>
         <button id="getUsers" onclick="GetUsers();">Get Users</button>
-        <button id="addUsers" onclick="AddUsers();">Add Users</button>
-        <button id="removeUsers" onclick="RemoveUsers();">Remove Users</button>
-        <button id="editUsers" onclick="UpdateUsers();">Update Users</button>
+        <button id="addUsers" onclick="openAddUsers();">Add Users</button>
+        <button id="removeUsers" onclick="openRemoveUsers();">Remove Users</button>
+        <button id="editUsers" onclick="openUpdateUsers();">Update Users</button>
 
     </div>
 
     <div id="getUsersTableWrapper" class="modal" style="display: none;">
-        <button class="close" id="closeGetUsersModal" style="background-color: #f44336; font-size: 8; padding: 10px;">X</button>
-        <h3>Clocked In Users</h3>
+        <p></p>
+        <button class="close" id="closeGetUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+        <h3>Users List</h3>
         <table id="userTable" border="1">
             <thead>
                 <tr>
@@ -416,11 +591,67 @@
                     <th>Department</th>
                 </tr>
             </thead>
-            <tbody id="userTableBody">
+            <tbody id="getUsersTableBody">
             </tbody>
         </table>
     </div>
 
+    <div id="addUsersWrapper" class="container" style="display: none;">
+        <p></p>
+        <button class="close" id="closeAddUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+        <h3>Add User Info</h3>
+        <label for="uid"><b>Username</b></label>
+        <input type="text" id="addUid" placeholder="Enter Username" name="username" required />
+        <p></p>
+        <label for="pass"><b>Password</b></label>
+        <input type="text" id="addPass" placeholder="Enter Password" name="pass" required />
+        <p></p>
+        <label for="fname"><b>First Name</b></label>
+        <input type="text" id="addFname" placeholder="Enter First Name" name="fname" required />
+        <p></p>
+        <label for="lname"><b>Last Name</b></label>
+        <input type="text" id="addLname" placeholder="Enter Last Name" name="lname" required />
+        <p></p>
+        <label for="dept"><b>Department</b></label>
+        <input type="text" id="addDept" placeholder="Enter Department" name="dept" required />
+        <p></p>
+        <button id="addUser" onclick="AddUser()">Add User</button>
 
+    </div>
+
+    <div id="removeUsersWrapper" class="container" style="display: none;">
+        <p></p>
+        <button class="close" id="closeRemoveUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+        <h3>Remove User by Username</h3>
+        <label for="uid"><b>Username</b></label>
+        <input type="text" id="removeUid" placeholder="Enter Username" name="username" required />
+        <p></p>
+        <button id="removeUser" onclick="RemoveUser()">Remove User</button>
+    </div>
+
+    <div id="updateUsersWrapper" class="container" style="display: none;">
+        <p></p>
+        <button class="close" id="closeUpdateUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+        <h3>Update User</h3>
+        <label for="empid"><b>Employee ID</b></label>
+        <input type="text" id="updateEmpId" placeholder="Enter Employee ID" name="empid" required />
+        <p></p>
+        <label for="uid"><b>Username</b></label>
+        <input type="text" id="updateUid" placeholder="Enter Username" name="username" required />
+        <p></p>
+        <label for="pass"><b>Password</b></label>
+        <input type="text" id="updatePass" placeholder="Enter Password" name="pass" required />
+        <p></p>
+        <label for="fname"><b>First Name</b></label>
+        <input type="text" id="updateFname" placeholder="Enter First Name" name="fname" required />
+        <p></p>
+        <label for="lname"><b>Last Name</b></label>
+        <input type="text" id="updateLname" placeholder="Enter Last Name" name="lname" required />
+        <p></p>
+        <label for="dept"><b>Department</b></label>
+        <input type="text" id="updateDept" placeholder="Enter Department" name="dept" required />
+        <p></p>
+        <button id="updateUser" onclick="UpdateUser()">Update User</button>
+    </div>
 </body>
 </html >
