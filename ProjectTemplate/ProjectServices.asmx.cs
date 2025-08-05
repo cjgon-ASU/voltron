@@ -663,16 +663,24 @@ namespace ProjectTemplate
             sqlConnection.Open();
             sqlDa.Fill(sqlDt);
 
+            // Get the first (and only) row
+            DataRow row = sqlDt.Rows[0]; 
+            int qid = Convert.ToInt32(row["question_id"]);
 
-            DataRow row = sqlDt.Rows[0]; // Get the first (and only) row
+            // Update the last_shown_at timestamp to the current time
+            string sqlUpdate = "UPDATE questions SET last_shown_at = NOW() WHERE question_id = @question_id";
+            MySqlCommand updateCommand = new MySqlCommand(sqlUpdate, sqlConnection);
+            updateCommand.Parameters.AddWithValue("@question_id", qid);
+            updateCommand.ExecuteNonQuery();
 
-            // Create a single Question object directly
+            // Create the Question object
             Question singleQuestion = new Question
             {
-                question_id = Convert.ToInt32(row["question_id"]),
+                question_id = qid,
                 category = row["category"].ToString(),
                 question_text = row["question_text"].ToString(),
             };
+            sqlConnection.Close();
 
             // Return an array containing just this one question
             return new Question[] { singleQuestion };
@@ -1130,8 +1138,8 @@ namespace ProjectTemplate
 
             string sqlConnectString = getConString();
             //this is a simple update, with parameters to pass in values
-            string sqlUpdate = "update news set title=@titleValue, content=@contentValue " +
-                      "where news_id=@newsIdValue";
+            string sqlUpdate = "update news set title = IF(@newTitleValue = '', title, @newTitleValue), content = IF(@newContentValue = ''," +
+                "content, @newContentValue) were announcement_id = @newsIdValue";
 
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
             MySqlCommand sqlCommand = new MySqlCommand(sqlUpdate, sqlConnection);
@@ -1445,6 +1453,44 @@ namespace ProjectTemplate
                 return totalHours;
                           
                      
+        }
+
+        // This method looks up the logged in users department and stores it in the session
+        [WebMethod(EnableSession = true)]
+        public string GetUserDept()
+        {
+            //check if the user is logged in
+            if (Session["id"] == null)
+            {
+                return "Error: User not logged in.";
+            }
+            //get employee ID from session
+            string empid = Session["id"].ToString();
+            //get the department of the user
+            string sqlConnectString = getConString();
+            string sqlSelect = "SELECT department FROM users WHERE empid = @empid";
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@empid", HttpUtility.UrlDecode(empid));
+            try
+            {
+                sqlConnection.Open();
+                object department = sqlCommand.ExecuteScalar();
+                sqlConnection.Close();
+                if (department != null)
+                {
+                    Session["department"] = department.ToString();
+                    return department.ToString();
+                }
+                else
+                {
+                    return "Error: Department not found.";
+                }
+            }
+            catch (Exception e)
+            {
+                return "Error: Unable to retrieve department.";
+            }
         }
     }
 
