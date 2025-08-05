@@ -173,21 +173,14 @@ namespace ProjectTemplate
         public bool AdminCheck()
         {
             //Check if the username is stored in the session, indicating a logged in user
-            if (Session["loggedInUsername"] != null)
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
             {
-                string username = Session["loggedInUsername"].ToString();
-                //string userInfo = $"Logged in as: {username}";
-
-                //Check if the user is an admin
-                if (Session["isAdmin"] != null && (bool)Session["isAdmin"] == true)
-                {
-                    username += " (Admin)";
-                }
-                return true;
+                
+                return false;
             }
             else
             {
-                return false;
+                return true;
             }
         }
 
