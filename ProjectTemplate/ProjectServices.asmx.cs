@@ -868,8 +868,9 @@ namespace ProjectTemplate
 
             string sqlConnectString = getConString();
             //this is a simple update, with parameters to pass in values
-            string sqlSelect = "update questions set category=@catValue, question_text=@textValue, is_active=@activeValue " +
-                "where question_id=@questionValue";
+            string sqlSelect = "update questions set category = IF(@catValue = '', category, @catValue)," +
+                               "question_text = IF(@textValue = '', question_text, @textValue), is_active = IF(@activeValue = '', is_active, @activeValue)" +
+                                "where question_id=@questionValue";
 
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
             MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
