@@ -3,7 +3,9 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Web;
 using System.Web.Services;
@@ -1517,7 +1519,7 @@ namespace ProjectTemplate
             //LOGIC: get all the feedback and return them!
             DataTable sqlDt = new DataTable("feedback");
             string sqlConnectString = getConString();
-            string sqlSelect = "select feedback_id, question_id, department, category, score, feedback_text, feedback_time from feedback order by feedback_id asc";
+            string sqlSelect = "select feedback_id, question_id, department, category, score, feedback_text, feedback_time, is_resolved from feedback order by feedback_id asc";
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
             MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
             //gonna use this to fill a data table
@@ -1539,7 +1541,8 @@ namespace ProjectTemplate
                     category = row["category"] != DBNull.Value ? row["category"].ToString() : null,
                     score = row["score"] != DBNull.Value ? Convert.ToInt32(row["score"]) : (int?)null,
                     feedback_text = row["feedback_text"] != DBNull.Value ? row["feedback_text"].ToString() : null,
-                    feedback_time = (DateTime)(row["feedback_time"] != DBNull.Value ? Convert.ToDateTime(row["feedback_time"]) : (DateTime?)null)
+                    feedback_time = (DateTime)(row["feedback_time"] != DBNull.Value ? Convert.ToDateTime(row["feedback_time"]) : (DateTime?)null),
+                    is_resolved = row["is_resolved"] != DBNull.Value ? Convert.ToBoolean(row["is_resolved"]) : false
                 });
             }
             //convert the list of feedback to an array and return!
@@ -1560,7 +1563,8 @@ namespace ProjectTemplate
             //LOGIC: get all the feedback for the logged in user and return them!
             DataTable sqlDt = new DataTable("feedback");
             string sqlConnectString = getConString();
-            string sqlSelect = "select feedback_id, question_id, empid, department, category, score, feedback_text, feedback_time from feedback where empid=@empid order by feedback_id asc";
+            string sqlSelect = "select feedback_id, question_id, empid, department, category, score, feedback_text, feedback_time, is_resolved " +
+                               "from feedback where category != 'Stress' order by feedback_id ASC";
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
             MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@empid", HttpUtility.UrlDecode(empid));
@@ -1584,11 +1588,90 @@ namespace ProjectTemplate
                     category = row["category"] != DBNull.Value ? row["category"].ToString() : null,
                     score = row["score"] != DBNull.Value ? Convert.ToInt32(row["score"]) : (int?)null,
                     feedback_text = row["feedback_text"] != DBNull.Value ? row["feedback_text"].ToString() : null,
-                    feedback_time = (DateTime)(row["feedback_time"] != DBNull.Value ? Convert.ToDateTime(row["feedback_time"]) : (DateTime?)null)
+                    feedback_time = (DateTime)(row["feedback_time"] != DBNull.Value ? Convert.ToDateTime(row["feedback_time"]) : (DateTime?)null),
+                    is_resolved = row["is_resolved"] != DBNull.Value ? Convert.ToBoolean(row["is_resolved"]) : false
                 });
             }
             //convert the list of feedback to an array and return!
             return feedbackList.ToArray();
+        }
+        // This method allows admin to resolve feedback
+        [WebMethod(EnableSession = true)]
+        public bool ResolveFeedback(string fid)
+        {
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //return "Error: You must be an administrator to resolve feedback.";
+                return false;
+            }
+            string sqlConnectString = getConString();
+            
+            //this is a simple update, with parameters to pass in values
+            string sqlUpdate = "update feedback set is_resolved=1 " +
+                "where feedback_id=@feedbackValue";
+
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlUpdate, sqlConnection);
+
+            try
+            {
+                sqlCommand.Parameters.AddWithValue("@feedbackValue", HttpUtility.UrlDecode(fid));
+
+                sqlConnection.Open();
+                int rowsAffected = sqlCommand.ExecuteNonQuery();
+
+                if (rowsAffected > 0)
+                {
+                    //return $"Feedback '{fid}' resolved successfully.";
+                    return true;
+                }
+                else
+                {
+                    //return $"Error: Feedback '{fid}' not found or could not be resolved.";
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                //return "Error: Cound not resolve feedback.";
+                return false;
+            }
+        }
+
+        // This method allow admin to get the average stress score for a department for the current week
+        [WebMethod(EnableSession = true)]
+        public double GetAvgStressScore(string dept)
+        {
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //if not an admin, return 0.0
+                return 0.0;
+            }
+
+            // with user provided department, get the average stress score for that department for the current week
+            string sqlConnectString = getConString();
+            string sqlSelect = "select avg(score) as avg_stress_score from feedback " +
+                               "where category = 'Stress' AND department = @department " +
+                               "and YEARWEEK(feedback_time, 1) = YEARWEEK(CURDATE(), 1);";
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@department", HttpUtility.UrlDecode(dept));
+            
+            sqlConnection.Open();
+            object result = sqlCommand.ExecuteScalar();
+            sqlConnection.Close();
+            if (result != DBNull.Value && result != null)
+            {
+                return Convert.ToDouble(result);
+            }
+            else
+            {
+                return 0.0;
+            }
+            
+            
         }
 
     }

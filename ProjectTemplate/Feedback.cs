@@ -15,6 +15,7 @@ namespace ProjectTemplate
         public int? score;
         public string feedback_text;
         public DateTime feedback_time;
-        
+        public bool is_resolved;
+
     }
 }
