@@ -1660,11 +1660,11 @@ namespace ProjectTemplate
             sqlCommand.Parameters.AddWithValue("@department", HttpUtility.UrlDecode(dept));
             
             sqlConnection.Open();
-            object result = sqlCommand.ExecuteScalar();
+            object stress = sqlCommand.ExecuteScalar();
             sqlConnection.Close();
-            if (result != DBNull.Value && result != null)
+            if (stress != DBNull.Value && stress != null)
             {
-                return Convert.ToDouble(result);
+                return Convert.ToDouble(stress);
             }
             else
             {
@@ -1672,6 +1672,96 @@ namespace ProjectTemplate
             }
             
             
+        }
+
+        // This method allows admin to get the average stress score for all departments for the current week
+        [WebMethod(EnableSession = true)]
+        public Stress[] GetDeptStressAveragesForCurrentWeek()
+        {
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //if not an admin return an empty array of Stress objects.
+                return new Stress[0];
+               
+            }
+            //get employee ID from session
+            string empid = Session["id"].ToString();
+            //LOGIC: get all the average stress scores for the current week/department and return them!
+            DataTable sqlDt = new DataTable("feedback");
+            string sqlConnectString = getConString();
+            string sqlSelect = "select department, AVG(score) as avg_stress_score from feedback " +
+                       "where category = 'Stress' AND YEARWEEK(feedback_time, 1) = YEARWEEK(CURDATE(), 1) " +
+                       "group by department;";
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+            
+            //gonna use this to fill a data table
+            MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+            //filling the data table
+            sqlConnection.Open();
+            sqlDa.Fill(sqlDt);
+            //loop through each row in the dataset, creating instances
+            //of our container class Stress.  Fill each Stress with
+            //data from the rows, then dump them in a list.
+            List<Stress> stressList = new List<Stress>();
+            foreach (DataRow row in sqlDt.Rows)
+            {
+                stressList.Add(new Stress
+                {
+                    department = row["department"] != DBNull.Value ? row["department"].ToString() : null,
+                    stress = row["avg_stress_score"] != DBNull.Value ? Convert.ToDouble(row["avg_stress_score"]) : (double?)null,
+                    
+                });
+            }
+            //convert the list of Stress to an array and return!
+            return stressList.ToArray();
+        }
+
+        // This method allows admin to get the average stress score for all departments within the start and end dates
+        [WebMethod(EnableSession = true)]
+        public Stress[] GetDeptStressAveragesForDateRange(string startDate, string endDate)
+        {
+            //admin check
+            if (Session["isAdmin"] == null || (bool)Session["isAdmin"] == false)
+            {
+                //if not an admin return an empty array of Stress objects.
+                return new Stress[0];
+
+            }
+
+            //get employee ID from session
+            string empid = Session["id"].ToString();
+            //LOGIC: get all the department average stress scores for the specfied dates and return them!
+            DataTable sqlDt = new DataTable("feedback");
+            string sqlConnectString = getConString();
+            string sqlSelect = "select department, AVG(score) as avg_stress_score from feedback " +
+                               "where category = 'Stress' AND feedback_time between @startDate AND @endDate " +
+                               "group by department;";
+            MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
+            MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@startDate", HttpUtility.UrlDecode(startDate));
+            sqlCommand.Parameters.AddWithValue("@endDate", HttpUtility.UrlDecode(endDate));
+
+            //gonna use this to fill a data table
+            MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+            //filling the data table
+            sqlConnection.Open();
+            sqlDa.Fill(sqlDt);
+            //loop through each row in the dataset, creating instances
+            //of our container class Stress.  Fill each Stress with
+            //data from the rows, then dump them in a list.
+            List<Stress> stressList = new List<Stress>();
+            foreach (DataRow row in sqlDt.Rows)
+            {
+                stressList.Add(new Stress
+                {
+                    department = row["department"] != DBNull.Value ? row["department"].ToString() : null,
+                    stress = row["avg_stress_score"] != DBNull.Value ? Convert.ToDouble(row["avg_stress_score"]) : (double?)null,
+                });
+            }
+            //convert the list of Stress to an array and return!
+            return stressList.ToArray();
         }
 
     }
