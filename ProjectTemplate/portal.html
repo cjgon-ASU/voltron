@@ -537,42 +537,63 @@
         }
 
 
-        document.addEventListener("DOMContentLoaded", function () {
-            document.querySelectorAll('.score-btn').forEach(button => {
-                button.addEventListener('click', function () {
-                    const score = this.getAttribute('data-score');
-                    SubmitEmojiFeedback(score);
-                });
-            });
+       document.addEventListener("DOMContentLoaded", function () {
 
-            document.getElementById("closeModal").addEventListener("click", function () {
-                document.getElementById("emojiFeedbackModal").style.display = "none";
-            });
+    // ✅ Admin check: show admin tools if user is admin
+    $.ajax({
+        type: "POST",
+        url: "ProjectServices.asmx/LoginInfo",
+        data: "{}",
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (msg) {
+            if (msg.d.isAdmin === true) {
+                $("#adminTools").show();
+            }
+        },
+        error: function () {
+            console.error("Failed to check admin login.");
+        }
+    });
 
-            document.getElementById("closeAnonModal").addEventListener("click", function () {
-                document.getElementById("submitAnonymousFeedback").style.display = "none";
-            });
-
-            document.getElementById("closeClockedInUsersModal").addEventListener("click", function () {
-                document.getElementById("userTableWrapper").style.display = "none";
-            });
-
-            document.getElementById("closeGetUsersModal").addEventListener("click", function () {
-                document.getElementById("getUsersTableWrapper").style.display = "none";
-            });
-
-            document.getElementById("closeAddUsersModal").addEventListener("click", function () {
-                document.getElementById("addUsersWrapper").style.display = "none";
-            });
-
-            document.getElementById("closeRemoveUsersModal").addEventListener("click", function () {
-                document.getElementById("removeUsersWrapper").style.display = "none";
-            });
-
-            document.getElementById("closeUpdateUsersModal").addEventListener("click", function () {
-                document.getElementById("updateUsersWrapper").style.display = "none";
-            });
+    // Emoji button handlers
+    document.querySelectorAll('.score-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const score = this.getAttribute('data-score');
+            SubmitEmojiFeedback(score);
         });
+    });
+
+    // Close modals
+    document.getElementById("closeModal").addEventListener("click", function () {
+        document.getElementById("emojiFeedbackModal").style.display = "none";
+    });
+
+    document.getElementById("closeAnonModal").addEventListener("click", function () {
+        document.getElementById("submitAnonymousFeedback").style.display = "none";
+    });
+
+    document.getElementById("closeClockedInUsersModal").addEventListener("click", function () {
+        document.getElementById("userTableWrapper").style.display = "none";
+    });
+
+    document.getElementById("closeGetUsersModal").addEventListener("click", function () {
+        document.getElementById("getUsersTableWrapper").style.display = "none";
+    });
+
+    document.getElementById("closeAddUsersModal").addEventListener("click", function () {
+        document.getElementById("addUsersWrapper").style.display = "none";
+    });
+
+    document.getElementById("closeRemoveUsersModal").addEventListener("click", function () {
+        document.getElementById("removeUsersWrapper").style.display = "none";
+    });
+
+    document.getElementById("closeUpdateUsersModal").addEventListener("click", function () {
+        document.getElementById("updateUsersWrapper").style.display = "none";
+    });
+});
+
 
 		function openAnonFeedback() {
 			document.getElementById("submitAnonymousFeedback").style.display = "block";
@@ -711,7 +732,7 @@
         </div>
     </div>
 
-    <div id="Admin Tools">
+    <<div id="adminTools" style="display: none;">
         <h1 style="font-size: 20px; text-decoration: underline;">Admin Tools</h1>
 
         <h1 style="font-size: 16px;">General</h1>
