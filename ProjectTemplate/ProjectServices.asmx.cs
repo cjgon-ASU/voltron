@@ -775,7 +775,7 @@ namespace ProjectTemplate
             DataTable sqlDt = new DataTable("users");
 
             string sqlConnectString = getConString();
-            string sqlSelect = "select question_id, category, question_text from questions order by question_id asc";
+            string sqlSelect = "select question_id, category, question_text, is_active from questions order by question_id asc";
 
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
             MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
@@ -797,7 +797,7 @@ namespace ProjectTemplate
                     question_id = Convert.ToInt32(sqlDt.Rows[i]["question_id"]),
                     category = sqlDt.Rows[i]["category"].ToString(),
                     question_text = sqlDt.Rows[i]["question_text"].ToString(),
-
+                    is_active = Convert.ToInt32(sqlDt.Rows[i]["is_active"])
                 });
             }
             //convert the list of accounts to an array and return!

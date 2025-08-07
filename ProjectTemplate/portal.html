@@ -374,7 +374,168 @@
                     alert("Could not submit feedback due to server error.");
 				}
             });
-		}
+        }
+
+        function submitNewQuestion() {
+            var cat = $("#questionCategory").val().trim();
+            var text = $("#questionText").val().trim();
+            var active = $("#questionActive").val();
+
+            if (!cat || !text) {
+                alert("Please fill in both category and question text.");
+                return;
+            }
+
+            var webMethod = "ProjectServices.asmx/AddQuestion";
+            var parameters = JSON.stringify({
+                cat: encodeURIComponent(cat),
+                text: encodeURIComponent(text),
+                active: encodeURIComponent(active)
+            });
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    if (msg.d === true) {
+                        alert("Question added successfully!");
+                        $("#addQuestionWrapper").hide();
+                    } else {
+                        alert("Failed to add question.");
+                    }
+                },
+                error: function () {
+                    alert("Error submitting question.");
+                }
+            });
+        }
+
+        function getAllQuestions() {
+            $.ajax({
+                type: "POST",
+                url: "ProjectServices.asmx/GetAllQuestions",
+                data: "{}",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    const questions = msg.d;
+                    let html = "";
+                    questions.forEach(q => {
+                        const isActive = q.is_active == 1;
+                        html += `<tr>
+                            <td>${q.question_id}</td>
+                            <td>${q.category}</td>
+                            <td>${q.question_text}</td>
+                            <td>
+                                <button onclick="toggleQuestionStatus(${q.question_id}, ${q.is_active ? 0 : 1})">
+                                    ${isActive ? "Deactivate" : "Activate"}
+                                </button>
+                                <button onclick="removeQuestion(${q.question_id})">Delete</button>
+                                <button onclick="openUpdateForm(${q.question_id}, '${q.category}', '${q.question_text}', ${q.is_active})">Edit</button>
+
+                    </td>
+                </tr>`;
+                    });
+                    $("#questionTableBody").html(html);
+                    $("#questionTableWrapper").show();
+                },
+                error: function () {
+                    alert("Failed to retrieve questions.");
+                }
+            });
+        }
+
+        function removeQuestion(questionId) {
+            if (!confirm("Are you sure you want to delete this question?")) return;
+
+            $.ajax({
+                type: "POST",
+                url: "ProjectServices.asmx/RemoveQuestion",
+                data: JSON.stringify({ qid: questionId.toString() }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    if (msg.d === true) {
+                        getAllQuestions();
+                    } else {
+                        alert("Failed to delete question.");
+                    }
+                },
+                error: function () {
+                    alert("Error deleting question.");
+                }
+            });
+        }
+
+        function toggleQuestionStatus(questionId, newStatus) {
+            const method = newStatus === 1 ? "TurnOnQuestion" : "TurnOffQuestion";
+            $.ajax({
+                type: "POST",
+                url: "ProjectServices.asmx/" + method,
+                data: JSON.stringify({ qid: questionId.toString() }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    if (msg.d === true) {
+                        getAllQuestions();
+                    } else {
+                        alert("Failed to update question status.");
+                    }
+                },
+                error: function () {
+                    alert("Error toggling question status.");
+                }
+            });
+        }
+
+        function openUpdateForm(id, category, text, active) {
+            $("#updateQuestionId").val(id);
+            $("#updateQuestionCategory").val(decodeURIComponent(category));
+            $("#updateQuestionText").val(decodeURIComponent(text));
+            $("#updateQuestionActive").val(active);
+            $("#updateQuestionWrapper").show();
+        }
+
+        function submitUpdatedQuestion() {
+            var qid = $("#updateQuestionId").val();
+            var cat = $("#updateQuestionCategory").val().trim();
+            var text = $("#updateQuestionText").val().trim();
+            var active = $("#updateQuestionActive").val();
+
+            if (!cat || !text) {
+                alert("Please fill in both category and question text.");
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "ProjectServices.asmx/UpdateQuestion",
+                data: JSON.stringify({
+                    qid: encodeURIComponent(qid),
+                    cat: encodeURIComponent(cat),
+                    text: encodeURIComponent(text),
+                    active: encodeURIComponent(active)
+                }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    if (msg.d === true) {
+                        alert("Question updated successfully.");
+                        $("#updateQuestionWrapper").hide();
+                        getAllQuestions();
+                    } else {
+                        alert("Failed to update question.");
+                    }
+                },
+                error: function () {
+                    alert("Error updating question.");
+                }
+            });
+        }
+
 
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll('.score-btn').forEach(button => {
@@ -429,6 +590,14 @@
             document.getElementById("updateUsersWrapper").style.display = "block";
         }
 
+        function showQuestions() {
+            document.getElementById("questionTableWrapper").style.display = "block";
+            getAllQuestions();
+        }
+
+        function openAddQuestion() {
+            document.getElementById("addQuestionWrapper").style.display = "block";
+        }
 
         function submitAnonFeedback() {
             var feedback = document.getElementById("feedbackText").value.trim();
@@ -508,7 +677,7 @@
     <p id="clockedinconfirm" style="display:none;">You are clocked in!</p>
 
 
-    
+
 
     <div id="emojiFeedbackModal" class="modal" style="display: none">
         <div class="modal-content">
@@ -574,6 +743,11 @@
         <button id="addUsers" onclick="openAddUsers();">Add Users</button>
         <button id="removeUsers" onclick="openRemoveUsers();">Remove Users</button>
         <button id="editUsers" onclick="openUpdateUsers();">Update Users</button>
+
+        <h1 style="font-size: 16px;">Question Management</h1>
+        <button id="addQuestion" onclick="openAddQuestion()">Add New Question</button>
+        <button id="showQuestion" onclick="showQuestions()">Show Questions</button>
+
 
     </div>
 
@@ -653,5 +827,45 @@
         <p></p>
         <button id="updateUser" onclick="UpdateUser()">Update User</button>
     </div>
+
+    <div id="addQuestionWrapper" style="display:none;">
+        <h3>Add Question</h3>
+        <input type="text" id="questionCategory" placeholder="Category">
+        <textarea id="questionText" placeholder="Question text"></textarea>
+        <select id="questionActive">
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+        </select>
+        <button onclick="submitNewQuestion()">Submit</button>
+    </div>
+
+    <div id="questionTableWrapper" style="display: none;">
+        <h3>All Questions</h3>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Category</th>
+                    <th>Text</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="questionTableBody"></tbody>
+        </table>
+    </div>
+
+    <div id="updateQuestionWrapper" style="display:none;">
+        <input type="hidden" id="updateQuestionId" />
+        <label>Category:</label><input type="text" id="updateQuestionCategory"><br>
+        <label>Question Text:</label><textarea id="updateQuestionText"></textarea><br>
+        <label>Active:</label>
+        <select id="updateQuestionActive">
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+        </select><br>
+        <button onclick="submitUpdatedQuestion()">Update Question</button>
+        <button onclick="$('#updateQuestionWrapper').hide()">Cancel</button>
+    </div>
+
 </body>
 </html >

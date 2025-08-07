@@ -11,7 +11,7 @@ namespace ProjectTemplate
         public string category;
         public string question_text;
         //public int? score;
-        //public int is_active;
+        public int is_active;
         //public DateTime created_at;
         //public DateTime last_shown_at;
     }
