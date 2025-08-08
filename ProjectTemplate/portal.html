@@ -542,12 +542,12 @@
     // ✅ Admin check: show admin tools if user is admin
     $.ajax({
         type: "POST",
-        url: "ProjectServices.asmx/LoginInfo",
+        url:  "ProjectServices.asmx/AdminCheck",
         data: "{}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (msg) {
-            if (msg.d.isAdmin === true) {
+            if (msg.d === true) {
                 $("#adminTools").show();
             }
         },
