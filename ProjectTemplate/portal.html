@@ -536,24 +536,7 @@
             });
         }
 
-        // ✅ Admin check: show admin tools if user is admin
-        $.ajax({
-            type: "POST",
-            url: "ProjectServices.asmx/AdminCheck",
-            data: "{}",
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            success: function (msg) {
-                if (msg.d === true) {
-                    $("#adminTools").show();
-                }
-            },
-            error: function () {
-                console.error("Failed to check admin login.");
-            }
-        });
-
-
+     
        document.addEventListener("DOMContentLoaded", function () {
 
     // ✅ Admin check: show admin tools if user is admin
