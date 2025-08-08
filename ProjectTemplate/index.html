@@ -3,47 +3,47 @@
 <head>
     <meta charset="utf-8" />
     <title></title>
-  <style>
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.4;
-    padding: 20px;
-    margin: 0;
-  }
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.4;
+            padding: 20px;
+            margin: 0;
+        }
 
-  button:first-of-type {
-    margin-bottom: 15px;
-  }
+        button:first-of-type {
+            margin-bottom: 15px;
+        }
 
-  .container {
-    padding: 5px 0;
-    margin-bottom: 10px;
-  }
+        .container {
+            padding: 5px 0;
+            margin-bottom: 10px;
+        }
 
-  label {
-    display: inline-block;
-    margin-right: 10px;
-    font-weight: bold;
-  }
+        label {
+            display: inline-block;
+            margin-right: 10px;
+            font-weight: bold;
+        }
 
-  input[type="text"] {
-    width: 200px;
-    padding: 8px;
-    margin-right: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
+        input[type="text"] {
+            width: 200px;
+            padding: 8px;
+            margin-right: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
 
-  .container + button {
-    margin-top: 10px;
-  }
+        .container + button {
+            margin-top: 10px;
+        }
 
-  button {
-    padding: 8px 15px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-</style>
+        button {
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    </style>
     <!--DO NOT FORGET THIS SCRIPT TAG SO YOU CAN USE JQUERY!!!!!-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
@@ -70,54 +70,52 @@
             });
         }
 
-		function LogOn() {
-			var id = document.getElementById("logonId").value;
-			var pass = document.getElementById("logonPass").value;
+        function LogOn() {
+            var id = document.getElementById("logonId").value;
+            var pass = document.getElementById("logonPass").value;
 
-			var webMethod = "ProjectServices.asmx/LogOn";
+            var webMethod = "ProjectServices.asmx/LogOn";
             var parameters = JSON.stringify({ uid: id, pass: pass });
 
-			$.ajax({
-				type: "POST",
-				url: webMethod,
-				data: parameters,
-				contentType: "application/json; charset=utf-8",
-				dataType: "json",
-				success: function (msg) {
-					var responseFromServer = msg.d;
-					if (responseFromServer == true) {
-						window.location.href = "portal.html";
-					}
-					else {
-						alert("Bad Credentials")
-					}
-				},
-				error: function (e) {
-					alert("this code will only execute if javascript is unable to access the webservice");
-				}
-			});
-		}
-	</script>
-	<!--END OF YOUR OWN JAVASCRIPT-->
-
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    var responseFromServer = msg.d;
+                    if (responseFromServer == true) {
+                        window.location.href = "portal.html";
+                    }
+                    else {
+                        alert("Bad Credentials")
+                    }
+                },
+                error: function (e) {
+                    alert("this code will only execute if javascript is unable to access the webservice");
+                }
+            });
+        }
+    </script>
+    <!--END OF YOUR OWN JAVASCRIPT-->
     <!--AND YOUR OWN CSS CAN GO HERE AS WELL-->
     <style>
-
     </style>
     <!--END OF YOUR OWN CSS-->
 </head>
 <body>
     <button onclick="javascript: TestButtonHandler();">Click here to test connection!</button>
 
-	<div class="container"> <!--This is the username and password input boxes!-->
-		<label for="username"><b>Username</b></label>
-		<input type="text" id="logonId" placeholder="Enter Username" name="username" required/>
-		<p></p>
-		<label for="pass"><b>Password</b></label>
-		<input type="text" id="logonPass" placeholder="Enter Password" name="pass" required/>
+    <div class="container">
+        <!--This is the username and password input boxes!-->
+        <label for="username"><b>Username</b></label>
+        <input type="text" id="logonId" placeholder="Enter Username" name="username" required />
+        <p></p>
+        <label for="pass"><b>Password</b></label>
+        <input type="text" id="logonPass" placeholder="Enter Password" name="pass" required />
     </div>
 
     <button onclick="LogOn();">Log On</button>
 </body>
-
 </html>
