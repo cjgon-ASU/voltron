@@ -556,7 +556,7 @@
         }
     });
 
-    // Emoji button handlers
+  
     document.querySelectorAll('.score-btn').forEach(button => {
         button.addEventListener('click', function () {
             const score = this.getAttribute('data-score');
@@ -564,7 +564,7 @@
         });
     });
 
-    // Close modals
+   
     document.getElementById("closeModal").addEventListener("click", function () {
         document.getElementById("emojiFeedbackModal").style.display = "none";
     });
@@ -659,9 +659,7 @@
             });
         }
 	</script>
-	<!--END OF YOUR OWN JAVASCRIPT-->
-
-	<!--AND YOUR OWN CSS CAN GO HERE AS WELL-->
+	
 	<style>
         * {
             font-family: 'Helvetica Neue LT Std';
@@ -689,7 +687,7 @@
             border: 1px solid #555555;
         }
 	</style>
-	<!--END OF YOUR OWN CSS-->
+
 </head >
 <body>
     <button id="logOffBtn" onclick="LogOff();">Log Off</button>
@@ -732,7 +730,7 @@
         </div>
     </div>
 
-    <<div id="adminTools" style="display: none;">
+    <div id="adminTools" style="display: none;">
         <h1 style="font-size: 20px; text-decoration: underline;">Admin Tools</h1>
 
         <h1 style="font-size: 16px;">General</h1>
@@ -801,89 +799,7 @@
         <label for="pass"><b>Password</b></label>
         <input type="text" id="addPass" placeholder="Enter Password" name="pass" required />
         <p></p>
-        <label for="fname"><b>First Name</b></label>
-        <input type="text" id="addFname" placeholder="Enter First Name" name="fname" required />
-        <p></p>
-        <label for="lname"><b>Last Name</b></label>
-        <input type="text" id="addLname" placeholder="Enter Last Name" name="lname" required />
-        <p></p>
-        <label for="dept"><b>Department</b></label>
-        <input type="text" id="addDept" placeholder="Enter Department" name="dept" required />
-        <p></p>
-        <button id="addUser" onclick="AddUser()">Add User</button>
 
-    </div>
-
-    <div id="removeUsersWrapper" class="container" style="display: none;">
-        <p></p>
-        <button class="close" id="closeRemoveUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
-        <h3>Remove User by Username</h3>
-        <label for="uid"><b>Username</b></label>
-        <input type="text" id="removeUid" placeholder="Enter Username" name="username" required />
-        <p></p>
-        <button id="removeUser" onclick="RemoveUser()">Remove User</button>
-    </div>
-
-    <div id="updateUsersWrapper" class="container" style="display: none;">
-        <p></p>
-        <button class="close" id="closeUpdateUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
-        <h3>Update User</h3>
-        <label for="empid"><b>Employee ID</b></label>
-        <input type="text" id="updateEmpId" placeholder="Enter Employee ID" name="empid" required />
-        <p></p>
-        <label for="uid"><b>Username</b></label>
-        <input type="text" id="updateUid" placeholder="Enter Username" name="username" required />
-        <p></p>
-        <label for="pass"><b>Password</b></label>
-        <input type="text" id="updatePass" placeholder="Enter Password" name="pass" required />
-        <p></p>
-        <label for="fname"><b>First Name</b></label>
-        <input type="text" id="updateFname" placeholder="Enter First Name" name="fname" required />
-        <p></p>
-        <label for="lname"><b>Last Name</b></label>
-        <input type="text" id="updateLname" placeholder="Enter Last Name" name="lname" required />
-        <p></p>
-        <label for="dept"><b>Department</b></label>
-        <input type="text" id="updateDept" placeholder="Enter Department" name="dept" required />
-        <p></p>
-        <button id="updateUser" onclick="UpdateUser()">Update User</button>
-    </div>
-
-    <div id="addQuestionWrapper" style="display:none;">
-        <h3>Add Question</h3>
-        <input type="text" id="questionCategory" placeholder="Category">
-        <textarea id="questionText" placeholder="Question text"></textarea>
-        <select id="questionActive">
-            <option value="1">Active</option>
-            <option value="0">Inactive</option>
-        </select>
-        <button onclick="submitNewQuestion()">Submit</button>
-    </div>
-
-    <div id="questionTableWrapper" style="display: none;">
-        <h3>All Questions</h3>
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Category</th>
-                    <th>Text</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="questionTableBody"></tbody>
-        </table>
-    </div>
-
-    <div id="updateQuestionWrapper" style="display:none;">
-        <input type="hidden" id="updateQuestionId" />
-        <label>Category:</label><input type="text" id="updateQuestionCategory"><br>
-        <label>Question Text:</label><textarea id="updateQuestionText"></textarea><br>
-        <label>Active:</label>
-        <select id="updateQuestionActive">
-            <option value="1">Active</option>
-            <option value="0">Inactive</option>
-        </select><br>
         <button onclick="submitUpdatedQuestion()">Update Question</button>
         <button onclick="$('#updateQuestionWrapper').hide()">Cancel</button>
     </div>

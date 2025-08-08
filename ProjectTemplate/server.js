@@ -7,6 +7,7 @@ const PORT = 3000;
 app.use(bodyParser.json());
 app.use(express.static(__dirname));
 
+let currentUser = null;
 
 const db = mysql.createPool({
   connectionLimit: 10,
@@ -17,14 +18,17 @@ const db = mysql.createPool({
   database: 'cis440summer2025team5'
 });
 
+
 db.getConnection((err, connection) => {
   if (err) {
     console.error('❌ Initial DB connection failed:', err);
   } else {
-    console.log('✅ Connected to MySQL database (pool)');
-    connection.release(); // release test connection
+    console.log(' Connected to MySQL database (pool)');
+    connection.release();
   }
 });
+
+
 app.post('/logon', (req, res) => {
   const { uid, pass } = req.body;
 
@@ -36,13 +40,35 @@ app.post('/logon', (req, res) => {
     }
 
     if (results.length > 0) {
-      res.json(true); // valid user
+      const user = results[0];
+
+      currentUser = {
+        isAdmin: user.isAdmin === 1,
+        username: user.username,
+        empid: user.empid,
+        dept: user.dept
+      };
+
+      res.json({
+        success: true,
+        ...currentUser
+      });
     } else {
-      res.json(false); // invalid user/pass
+      res.json({ success: false });
     }
   });
 });
 
+
+app.post('/LoginInfo', (req, res) => {
+  if (currentUser) {
+    res.json(currentUser);
+  } else {
+    res.json({ isAdmin: false });
+  }
+});
+
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
