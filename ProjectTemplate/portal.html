@@ -3,16 +3,16 @@
 <head>
 	<meta charset="utf-8" />
 	<title></title>
-	<!--DO NOT FORGET THIS SCRIPT TAG SO YOU CAN USE JQUERY!!!!!-->
+	
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
-	<!--YOUR OWN JAVASCRIPT CAN GO RIGHT HERE-->
+	
 	<script type="text/javascript">
 		function TestButtonHandler() {
 			var webMethod = "ProjectServices.asmx/TestConnection";
 			var parameters = "{}";
 
-			//jQuery ajax method
+	
 			$.ajax({
 				type: "POST",
 				url: webMethod,
@@ -875,17 +875,6 @@
         }
 
 
-
-
-
-
-
-
-
-
-
-
-
         function submitAnonFeedback() {
             var feedback = document.getElementById("feedbackText").value.trim();
 
@@ -923,11 +912,87 @@
                     alert("Server error while submitting feedback.");
                 }
             });
+            
         }
-	</script>
-	<!--END OF YOUR OWN JAVASCRIPT-->
+       function GetMyWeeklyHours() {
+  var weekStartVal = $("#weekStartInput").val();
+  var webMethod = "ProjectServices.asmx/GetMyWeeklyHours";
 
-	<!--AND YOUR OWN CSS CAN GO HERE AS WELL-->
+  var hasWeek = !!weekStartVal;
+  var parameters = hasWeek
+    ? JSON.stringify({ weekStart: weekStartVal })
+    : "{}";
+
+  function renderHours(msg) {
+    var data = msg && msg.d ? msg.d : [];
+    var days = Array.isArray(data) ? data : (data.days || []);
+    var total = Array.isArray(data)
+      ? days.reduce((s, d) => s + (parseFloat(d.hours) || 0), 0)
+      : (parseFloat(data.totalHours) || 0);
+
+    var tbody = $("#myWeeklyHoursTableBody");
+    tbody.empty();
+
+    if (!days.length) {
+      tbody.append("<tr><td colspan='2'>No hours recorded for this week.</td></tr>");
+      $("#myWeeklyHoursTotal").text("0");
+      $("#myWeeklyHoursWrapper").show();
+      return;
+    }
+
+    days.forEach(function (d) {
+      var dt = d.date || d.day || d.workDate;
+
+      if (typeof dt === "string" && /\/Date\(\d+\)\//.test(dt)) {
+        var ts = parseInt(dt.match(/\d+/)[0], 10);
+        dt = new Date(ts).toISOString().slice(0, 10);
+      }
+      var hr = (d.hours != null ? d.hours : d.total) || 0;
+      var nice = dt ? new Date(dt).toLocaleDateString() : "";
+      tbody.append(`<tr><td>${nice}</td><td>${hr}</td></tr>`);
+    });
+
+    $("#myWeeklyHoursTotal").text(total.toFixed ? total.toFixed(2) : total);
+    $("#myWeeklyHoursWrapper").show();
+  }
+
+  // main request
+  $.ajax({
+    type: "POST",
+    url: webMethod,
+    data: parameters,
+    contentType: "application/json; charset=utf-8",
+    dataType: "json",
+    success: renderHours,
+    error: function (xhr, status, err) {
+ 
+      if (hasWeek) {
+        $.ajax({
+          type: "POST",
+          url: webMethod,
+          data: "{}",
+          contentType: "application/json; charset=utf-8",
+          dataType: "json",
+          success: renderHours,
+          error: function (xhr2) {
+            console.error("GetMyWeeklyHours retry failed:", xhr2.status, xhr2.responseText);
+            alert("Unable to retrieve hours (retry). See console for details.");
+          }
+        });
+      } else {
+        console.error("GetMyWeeklyHours error:", xhr.status, xhr.responseText);
+        alert("Unable to retrieve hours. See console for details.");
+      }
+    }
+  });
+}
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("closeMyWeeklyHours").addEventListener("click", function () {
+        document.getElementById("myWeeklyHoursWrapper").style.display = "none";
+    });
+});
+	</script>
+
 	<style>
         * {
             font-family: 'Helvetica Neue LT Std';
@@ -955,7 +1020,7 @@
             border: 1px solid #555555;
         }
 	</style>
-	<!--END OF YOUR OWN CSS-->
+
 </head>
 
 
@@ -999,7 +1064,36 @@
             </div>
         </div>
     </div>
+<button id="viewMyHoursBtn" onclick="GetMyWeeklyHours()">View My Weekly Hours</button>
 
+<div id="myWeeklyHoursWrapper" class="modal" style="display:none;">
+  <div class="modal-content">
+    <button class="close" id="closeMyWeeklyHours" style="background-color:#f44336;font-size:8px;padding:10px;">X</button>
+    <h3>My Weekly Hours</h3>
+
+    <div style="margin:8px 0;">
+      <label for="weekStartInput">Week starting:</label>
+      <input type="date" id="weekStartInput" />
+      <button onclick="GetMyWeeklyHours()">Load</button>
+    </div>
+
+    <table border="1" style="width:100%;max-width:600px;">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Hours</th>
+        </tr>
+      </thead>
+      <tbody id="myWeeklyHoursTableBody"></tbody>
+      <tfoot>
+        <tr>
+          <th style="text-align:right;">Total</th>
+          <th id="myWeeklyHoursTotal">0</th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
 
 
 
