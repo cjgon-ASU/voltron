@@ -750,7 +750,62 @@
             });
         }
 
+        function WeeklyHours() {
+            $.ajax({
+                type: "POST",
+                url: "ProjectServices.asmx/WeeklyHours",
+                data: "{}",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    let hours = msg.d;
+                    $("#weeklyHoursDisplay").html(`You've worked ${hours.toFixed(2)} hours this week.`);
+                },
+                error: function () {
+                    alert("Failed to retrieve weekly hours.");
+                }
+            });
+        }
 
+        function loadUserFeedback() {
+            $.ajax({
+                type: "POST",
+                url: "ProjectServices.asmx/GetUserFeedback",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    const feedbackArray = response.d;
+                    let html = "<h3>Your Feedback</h3>";
+
+                    if (feedbackArray.length === 0) {
+                        html += "<p>No feedback found.</p>";
+                    } else {
+                        html += "<table border='1' style='border-collapse: collapse;'>";
+                        html += "<tr><th>ID</th><th>Category</th><th>Score</th><th>Feedback</th><th>Time</th><th>Resolved</th></tr>";
+
+                        feedbackArray.forEach(fb => {
+                            html += "<tr>";
+                            html += `<td>${fb.feedback_id}</td>`;
+                            html += `<td>${fb.category}</td>`;
+                            html += `<td>${fb.score ?? "N/A"}</td>`;
+                            html += `<td>${fb.feedback_text}</td>`;
+                            html += `<td>${new Date(fb.feedback_time).toLocaleString()}</td>`;
+                            html += `<td>${fb.is_resolved ? "✅" : "❌"}</td>`;
+                            html += "</tr>";
+                        });
+
+                        html += "</table>";
+                    }
+
+                    document.getElementById("userFeedbackContainer").innerHTML = html;
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error loading feedback:", error);
+                    document.getElementById("userFeedbackContainer").innerHTML =
+                        "<p style='color: red;'>Failed to load feedback. Are you logged in?</p>";
+                }
+            });
+        }
 
 
 
@@ -966,6 +1021,10 @@
     <button id="clockInBtn" onclick="ClockIn();">Clock In</button>
     <button id="clockOutBtn" onclick="ClockOut();" style="display: none;">Clock Out</button>
     <p id="clockedinconfirm" style="display:none;">You are clocked in!</p>
+    <button onclick="WeeklyHours()">Check Weekly Hours Worked</button>
+    <div id="weeklyHoursDisplay"></div>
+    <button onclick="loadUserFeedback()">View My Feedback</button>
+    <div id="userFeedbackContainer"></div>
 
 
     <div id="emojiFeedbackModal" class="modal" style="display: none">

@@ -1563,7 +1563,7 @@ namespace ProjectTemplate
             DataTable sqlDt = new DataTable("feedback");
             string sqlConnectString = getConString();
             string sqlSelect = "select feedback_id, question_id, empid, department, category, score, feedback_text, feedback_time, is_resolved " +
-                               "from feedback where category != 'Stress' order by feedback_id ASC";
+                               "from feedback where category != 'Stress' and empid = @empid order by feedback_id ASC";
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
             MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@empid", HttpUtility.UrlDecode(empid));
