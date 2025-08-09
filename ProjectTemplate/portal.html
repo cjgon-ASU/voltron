@@ -567,11 +567,15 @@
                     tableBody.empty();
 
                     for (let i = 0; i < newsArray.length; i++) {
+
+                        let timestamp = parseInt(newsArray[i].posted_at.match(/\d+/)[0], 10);
+                        let formattedDate = new Date(timestamp).toLocaleString();
+                        
                         let row = `<tr>
                     <td>${newsArray[i].news_id}</td>
                     <td>${newsArray[i].title}</td>
                     <td>${newsArray[i].content}</td>
-                    <td>${new Date(newsArray[i].posted_at).toLocaleString()}</td>
+                    <td>${formattedDate}</td>
                 </tr>`;
                         tableBody.append(row);
                     }
