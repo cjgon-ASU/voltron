@@ -554,6 +554,206 @@
             }
         });
 
+
+        function getNews() {
+            $.ajax({
+                type: "POST",
+                url: "ProjectServices.asmx/GetAllNews", 
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    let newsArray = response.d; 
+                    let tableBody = $("#getNewsTableBody");
+                    tableBody.empty();
+
+                    for (let i = 0; i < newsArray.length; i++) {
+                        let row = `<tr>
+                    <td>${newsArray[i].news_id}</td>
+                    <td>${newsArray[i].title}</td>
+                    <td>${newsArray[i].content}</td>
+                    <td>${new Date(newsArray[i].posted_at).toLocaleString()}</td>
+                </tr>`;
+                        tableBody.append(row);
+                    }
+
+                    $("#getNewsTableWrapper").show();
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error getting news:", error);
+                    alert("Failed to fetch news data.");
+                }
+            });
+        }
+
+
+        function turnOnNews() {
+            var nid = document.getElementById('newsIdInput').value.trim();
+            if (nid === "") {
+                alert("Please enter a News ID.");
+                return;
+            }
+            $.ajax({
+                type: "POST",
+                url: "ProjectServices.asmx/TurnOnNews",
+                data: JSON.stringify({ nid: encodeURIComponent(nid) }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.d === true) {
+                        alert("News Post is now active!")
+                    } else {
+                        alert("Error activating News Post.")
+                    }
+                },
+                error: function () {
+                    document.getElementById('turnOnNewsMessage').innerText = "An error occurred while trying to activate the news post.";
+                }
+            });
+        }
+
+        function turnOffNews() {
+            var nid = document.getElementById('turnOffNewsId').value.trim();
+            if (nid === "") {
+                alert("Please enter a News ID.");
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "ProjectServices.asmx/TurnOffNews",
+                data: JSON.stringify({ nid: encodeURIComponent(nid) }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.d === true) {
+                        alert("News Post turned off successfully!");
+                        document.getElementById('turnOffNewsId').value = "";
+                    } else {
+                        alert("Failed to turn off News Post.");
+                    }
+                },
+                error: function () {
+                    alert("An error occurred while trying to turn off the news post.");
+                }
+            });
+        }
+
+        function addNews() {
+            var title = document.getElementById('newsTitle').value.trim();
+            var content = document.getElementById('newsContent').value.trim();
+
+            if (title === "" || content === "") {
+                alert("Please enter both a title and content.");
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "ProjectServices.asmx/AddNews",
+                data: JSON.stringify({
+                    title: title,
+                    content: content,
+                }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.d === true) {
+                        alert("News Post added successfully!");
+                        document.getElementById('newsTitle').value = "";
+                        document.getElementById('newsContent').value = "";
+                    } else {
+                        alert("Failed to add News Post.");
+                    }
+                },
+                error: function () {
+                    alert("An error occurred while adding the News Post.");
+                }
+            });
+        }
+
+
+        function RemoveNewsById() {
+            var nid = $("#removeNewsId").val().trim();
+            if (!nid) {
+                alert("Please enter a News ID to remove.");
+                return;
+            }
+
+            RemoveNews(nid);
+        }
+
+
+        function RemoveNews(nid) {
+            var webMethod = "ProjectServices.asmx/RemoveNews";
+            var parameters = JSON.stringify({ nid: nid });
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.d === true) {
+                        alert("News removed successfully!");
+                    } else {
+                        alert("Failed to remove news.");
+                    }
+                },
+                error: function () {
+                    alert("Error calling RemoveNews web method.");
+                }
+            });
+        }
+
+        function UpdateNewsById() {
+            var nid = $("#updateNewsId").val().trim();
+            var newTitle = $("#updateNewsTitle").val().trim();
+            var newContent = $("#updateNewsContent").val().trim();
+
+            if (!nid) {
+                alert("Please enter the News ID to update.");
+                return;
+            }
+
+            var webMethod = "ProjectServices.asmx/UpdateNews";
+            var parameters = JSON.stringify({
+                nid: nid,
+                title: newTitle,
+                content: newContent
+            });
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    console.log("Response:", response);
+                    if (response.d === true) {
+                        alert("News updated successfully!");
+                        $("#updateNewsId, #updateNewsTitle, #updateNewsContent").val("");
+                        $("#updateNewsWrapper").hide();
+                    } else {
+                        alert("Failed to update news.");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX error:", status, error);
+                    alert("An error occurred while updating the news.");
+                }
+            });
+        }
+
+
+
+
+
+
+
+
+
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll('.score-btn').forEach(button => {
                 button.addEventListener('click', function () {
@@ -589,7 +789,45 @@
             document.getElementById("closeUpdateUsersModal").addEventListener("click", function () {
                 document.getElementById("updateUsersWrapper").style.display = "none";
             });
+            document.getElementById("closeAddQuestionWrapper").addEventListener("click", function () {
+                document.getElementById("addQuestionWrapper").style.display = "none";
+            });
+            document.getElementById("closeUpdateQuestionWrapper").addEventListener("click", function () {
+                document.getElementById("updateQuestionWrapper").style.display = "none";
+            });
+            document.getElementById("closeQuestionTableWrapper").addEventListener("click", function () {
+                document.getElementById("questionTableWrapper").style.display = "none";
+            });
+            document.getElementById("closeGetNewsModal").addEventListener("click", function () {
+                document.getElementById("getNewsTableWrapper").style.display = "none";
+            });
+            document.getElementById("closeTurnOnNewsWrapper").addEventListener("click", function () {
+                document.getElementById("turnOnNewsWrapper").style.display = "none";
+            });
+            document.getElementById("closeTurnOffNewsWrapper").addEventListener("click", function () {
+                document.getElementById("turnOffNewsWrapper").style.display = "none";
+            });
+            document.getElementById("closeAddNewsWrapper").addEventListener("click", function () {
+                document.getElementById("addNewsWrapper").style.display = "none";
+            });
+            document.getElementById("closeRemoveNewsWrapper").addEventListener("click", function () {
+                document.getElementById("removeNewsWrapper").style.display = "none";
+            });
+            document.getElementById("closeUpdateNewsWrapper").addEventListener("click", function () {
+                document.getElementById("updateNewsWrapper").style.display = "none";
+            });
+
         });
+
+
+
+
+
+
+
+
+
+
 
 		function openAnonFeedback() {
 			document.getElementById("submitAnonymousFeedback").style.display = "block";
@@ -615,6 +853,34 @@
         function openAddQuestion() {
             document.getElementById("addQuestionWrapper").style.display = "block";
         }
+
+        function openTurnOnNews() {
+            document.getElementById("turnOnNewsWrapper").style.display = "block";
+        }
+        function openTurnOffNews() {
+            document.getElementById("turnOffNewsWrapper").style.display = "block";
+        }
+        function openAddNews() {
+            document.getElementById("addNewsWrapper").style.display = "block";
+        }
+        function openRemoveNews() {
+            document.getElementById("removeNewsWrapper").style.display = "block";
+        }
+        function openUpdateNews() {
+            document.getElementById("updateNewsWrapper").style.display = "block";
+        }
+
+
+
+
+
+
+
+
+
+
+
+
 
         function submitAnonFeedback() {
             var feedback = document.getElementById("feedbackText").value.trim();
@@ -686,14 +952,16 @@
         }
 	</style>
 	<!--END OF YOUR OWN CSS-->
-</head >
+</head>
+
+
+
+
 <body>
     <button id="logOffBtn" onclick="LogOff();">Log Off</button>
     <button id="clockInBtn" onclick="ClockIn();">Clock In</button>
     <button id="clockOutBtn" onclick="ClockOut();" style="display: none;">Clock Out</button>
     <p id="clockedinconfirm" style="display:none;">You are clocked in!</p>
-
-
 
 
     <div id="emojiFeedbackModal" class="modal" style="display: none">
@@ -728,6 +996,13 @@
         </div>
     </div>
 
+
+
+
+
+
+
+
     <div id="adminTools" style="display: none;">
         <h1 style="font-size: 20px; text-decoration: underline;">Admin Tools</h1>
 
@@ -755,134 +1030,256 @@
         </div>
 
 
+
+
+
+
+
+
+
+
         <h1 style="font-size: 16px;">User Management</h1>
         <button id="getUsers" onclick="GetUsers();">Get Users</button>
         <button id="addUsers" onclick="openAddUsers();">Add Users</button>
         <button id="removeUsers" onclick="openRemoveUsers();">Remove Users</button>
         <button id="editUsers" onclick="openUpdateUsers();">Update Users</button>
 
+
+        <div id="getUsersTableWrapper" class="modal" style="display: none;">
+            <p></p>
+            <button class="close" id="closeGetUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>Users List</h3>
+            <table id="userTable" border="1">
+                <thead>
+                    <tr>
+                        <th>EmpID</th>
+                        <th>Username</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Department</th>
+                    </tr>
+                </thead>
+                <tbody id="getUsersTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div id="addUsersWrapper" class="container" style="display: none;">
+            <p></p>
+            <button class="close" id="closeAddUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>Add User Info</h3>
+            <label for="uid"><b>Username</b></label>
+            <input type="text" id="addUid" placeholder="Enter Username" name="username" required />
+            <p></p>
+            <label for="pass"><b>Password</b></label>
+            <input type="text" id="addPass" placeholder="Enter Password" name="pass" required />
+            <p></p>
+            <label for="fname"><b>First Name</b></label>
+            <input type="text" id="addFname" placeholder="Enter First Name" name="fname" required />
+            <p></p>
+            <label for="lname"><b>Last Name</b></label>
+            <input type="text" id="addLname" placeholder="Enter Last Name" name="lname" required />
+            <p></p>
+            <label for="dept"><b>Department</b></label>
+            <input type="text" id="addDept" placeholder="Enter Department" name="dept" required />
+            <p></p>
+            <button id="addUser" onclick="AddUser()">Add User</button>
+
+        </div>
+
+        <div id="removeUsersWrapper" class="container" style="display: none;">
+            <p></p>
+            <button class="close" id="closeRemoveUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>Remove User by Username</h3>
+            <label for="uid"><b>Username</b></label>
+            <input type="text" id="removeUid" placeholder="Enter Username" name="username" required />
+            <p></p>
+            <button id="removeUser" onclick="RemoveUser()">Remove User</button>
+        </div>
+
+        <div id="updateUsersWrapper" class="container" style="display: none;">
+            <p></p>
+            <button class="close" id="closeUpdateUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>Update User</h3>
+            <label for="empid"><b>Employee ID</b></label>
+            <input type="text" id="updateEmpId" placeholder="Enter Employee ID" name="empid" required />
+            <p></p>
+            <label for="uid"><b>Username</b></label>
+            <input type="text" id="updateUid" placeholder="Enter Username" name="username" required />
+            <p></p>
+            <label for="pass"><b>Password</b></label>
+            <input type="text" id="updatePass" placeholder="Enter Password" name="pass" required />
+            <p></p>
+            <label for="fname"><b>First Name</b></label>
+            <input type="text" id="updateFname" placeholder="Enter First Name" name="fname" required />
+            <p></p>
+            <label for="lname"><b>Last Name</b></label>
+            <input type="text" id="updateLname" placeholder="Enter Last Name" name="lname" required />
+            <p></p>
+            <label for="dept"><b>Department</b></label>
+            <input type="text" id="updateDept" placeholder="Enter Department" name="dept" required />
+            <p></p>
+            <button id="updateUser" onclick="UpdateUser()">Update User</button>
+        </div>
+
+
+
+
+
+
+
+
         <h1 style="font-size: 16px;">Question Management</h1>
         <button id="addQuestion" onclick="openAddQuestion()">Add New Question</button>
         <button id="showQuestion" onclick="showQuestions()">Show Questions</button>
 
 
+        <div id="addQuestionWrapper" style="display:none;">
+            <p></p>
+            <button class="close" id="closeAddQuestionWrapper" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>Add Question</h3>
+            <input type="text" id="questionCategory" placeholder="Category">
+            <textarea id="questionText" placeholder="Question text"></textarea>
+            <select id="questionActive">
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+            </select>
+            <button onclick="submitNewQuestion()">Submit</button>
+        </div>
+
+        <div id="questionTableWrapper" style="display: none;">
+            <p></p>
+            <button class="close" id="closeQuestionTableWrapper" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>All Questions</h3>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Category</th>
+                        <th>Text</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="questionTableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="updateQuestionWrapper" style="display:none;">
+            <p></p>
+            <button class="close" id="closeUpdateQuestionWrapper" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <input type="hidden" id="updateQuestionId" />
+            <label>Category:</label><input type="text" id="updateQuestionCategory"><br>
+            <label>Question Text:</label><textarea id="updateQuestionText"></textarea><br>
+            <label>Active:</label>
+            <select id="updateQuestionActive">
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+            </select><br>
+            <button onclick="submitUpdatedQuestion()">Update Question</button>
+            <button onclick="$('#updateQuestionWrapper').hide()">Cancel</button>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <h1 style="font-size: 16px;">News Management</h1>
+        <button id="getAllNews" onclick="getNews();">Get News</button>
+        <button id="turnOnNews" onclick="openTurnOnNews();">Turn On News</button>
+        <button id="turnOffNews" onclick="openTurnOffNews();">Turn Off News</button>
+        <button id="addNews" onclick="openAddNews();">Add News</button>
+        <button id="removeNews" onclick="openRemoveNews();">Remove News</button>
+        <button id="updateNews" onclick="openUpdateNews();">Update News</button>
+
+
+        <div id="getNewsTableWrapper" class="modal" style="display: none;">
+            <p></p>
+            <button class="close" id="closeGetNewsModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>News List</h3>
+            <table id="newsTable" border="1">
+                <thead>
+                    <tr>
+                        <th>News ID</th>
+                        <th>Title</th>
+                        <th>Content</th>
+                        <th>Posted At</th>
+                    </tr>
+                </thead>
+                <tbody id="getNewsTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div id="turnOnNewsWrapper" class="modal" style="display:none;">
+            <p></p>
+            <button class="close" id="closeTurnOnNewsWrapper" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>Turn On News Post</h3>
+            <label for="newsIdInput">News ID:</label>
+            <input type="text" id="newsIdInput" placeholder="Enter News ID" />
+            <p></p>
+            <button id="turnOnNews" onclick="turnOnNews();">Turn On News</button>
+        </div>
+
+        <div id="turnOffNewsWrapper" class="container" style="display:none;">
+            <p></p>
+            <button class="close" id="closeTurnOffNewsWrapper" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>Turn Off News Post</h3>
+            <label for="turnOffNewsId">News ID:</label>
+            <input type="text" id="turnOffNewsId" placeholder="Enter News ID" required />
+            <p></p>
+            <button id="turnOffNews" onclick="turnOffNews()">Turn Off News</button>
+        </div>
+
+        <div id="addNewsWrapper" class="container" style="display:none;">
+            <p></p>
+            <button class="close" id="closeAddNewsWrapper" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>Add News Post</h3>
+            <label for="newsTitle">Title:</label><br />
+            <input type="text" id="newsTitle" placeholder="Enter title" required /><br /><br />
+
+            <label for="newsContent">Content:</label><br />
+            <textarea id="newsContent" placeholder="Enter news content" rows="4" cols="50" required></textarea><br /><br />
+            <p></p>
+            <button onclick="addNews()">Add News</button>
+        </div>
+
+        <div id="removeNewsWrapper" style="display:none; margin-top: 20px;">
+            <p></p>
+            <button class="close" id="closeRemoveNewsWrapper" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>Remove News Post</h3>
+            <label for="removeNewsId">News ID:</label>
+            <input type="text" id="removeNewsId" name="removeNewsId" placeholder="Enter News ID" />
+            <p></p>
+            <button onclick="RemoveNewsById()">Remove News</button>
+        </div>
+
+        <div id="updateNewsWrapper" style="display:none; margin-top: 20px;">
+            <p></p>
+            <button class="close" id="closeUpdateNewsWrapper" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>Update News Post</h3>
+            <label for="updateNewsId">News ID:</label>
+            <input type="text" id="updateNewsId" placeholder="Enter News ID" />
+            <br />
+            <label for="updateNewsTitle">New Title:</label>
+            <input type="text" id="updateNewsTitle" placeholder="Enter new title (optional)" />
+            <br />
+            <label for="updateNewsContent">New Content:</label>
+            <textarea id="updateNewsContent" placeholder="Enter new content (optional)"></textarea>
+            <br />
+            <button onclick="UpdateNewsById()">Update News</button>
+        </div>
+
     </div>
 
-    <div id="getUsersTableWrapper" class="modal" style="display: none;">
-        <p></p>
-        <button class="close" id="closeGetUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
-        <h3>Users List</h3>
-        <table id="userTable" border="1">
-            <thead>
-                <tr>
-                    <th>EmpID</th>
-                    <th>Username</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Department</th>
-                </tr>
-            </thead>
-            <tbody id="getUsersTableBody">
-            </tbody>
-        </table>
-    </div>
 
-    <div id="addUsersWrapper" class="container" style="display: none;">
-        <p></p>
-        <button class="close" id="closeAddUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
-        <h3>Add User Info</h3>
-        <label for="uid"><b>Username</b></label>
-        <input type="text" id="addUid" placeholder="Enter Username" name="username" required />
-        <p></p>
-        <label for="pass"><b>Password</b></label>
-        <input type="text" id="addPass" placeholder="Enter Password" name="pass" required />
-        <p></p>
-        <label for="fname"><b>First Name</b></label>
-        <input type="text" id="addFname" placeholder="Enter First Name" name="fname" required />
-        <p></p>
-        <label for="lname"><b>Last Name</b></label>
-        <input type="text" id="addLname" placeholder="Enter Last Name" name="lname" required />
-        <p></p>
-        <label for="dept"><b>Department</b></label>
-        <input type="text" id="addDept" placeholder="Enter Department" name="dept" required />
-        <p></p>
-        <button id="addUser" onclick="AddUser()">Add User</button>
-
-    </div>
-
-    <div id="removeUsersWrapper" class="container" style="display: none;">
-        <p></p>
-        <button class="close" id="closeRemoveUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
-        <h3>Remove User by Username</h3>
-        <label for="uid"><b>Username</b></label>
-        <input type="text" id="removeUid" placeholder="Enter Username" name="username" required />
-        <p></p>
-        <button id="removeUser" onclick="RemoveUser()">Remove User</button>
-    </div>
-
-    <div id="updateUsersWrapper" class="container" style="display: none;">
-        <p></p>
-        <button class="close" id="closeUpdateUsersModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
-        <h3>Update User</h3>
-        <label for="empid"><b>Employee ID</b></label>
-        <input type="text" id="updateEmpId" placeholder="Enter Employee ID" name="empid" required />
-        <p></p>
-        <label for="uid"><b>Username</b></label>
-        <input type="text" id="updateUid" placeholder="Enter Username" name="username" required />
-        <p></p>
-        <label for="pass"><b>Password</b></label>
-        <input type="text" id="updatePass" placeholder="Enter Password" name="pass" required />
-        <p></p>
-        <label for="fname"><b>First Name</b></label>
-        <input type="text" id="updateFname" placeholder="Enter First Name" name="fname" required />
-        <p></p>
-        <label for="lname"><b>Last Name</b></label>
-        <input type="text" id="updateLname" placeholder="Enter Last Name" name="lname" required />
-        <p></p>
-        <label for="dept"><b>Department</b></label>
-        <input type="text" id="updateDept" placeholder="Enter Department" name="dept" required />
-        <p></p>
-        <button id="updateUser" onclick="UpdateUser()">Update User</button>
-    </div>
-
-    <div id="addQuestionWrapper" style="display:none;">
-        <h3>Add Question</h3>
-        <input type="text" id="questionCategory" placeholder="Category">
-        <textarea id="questionText" placeholder="Question text"></textarea>
-        <select id="questionActive">
-            <option value="1">Active</option>
-            <option value="0">Inactive</option>
-        </select>
-        <button onclick="submitNewQuestion()">Submit</button>
-    </div>
-
-    <div id="questionTableWrapper" style="display: none;">
-        <h3>All Questions</h3>
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Category</th>
-                    <th>Text</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="questionTableBody"></tbody>
-        </table>
-    </div>
-
-    <div id="updateQuestionWrapper" style="display:none;">
-        <input type="hidden" id="updateQuestionId" />
-        <label>Category:</label><input type="text" id="updateQuestionCategory"><br>
-        <label>Question Text:</label><textarea id="updateQuestionText"></textarea><br>
-        <label>Active:</label>
-        <select id="updateQuestionActive">
-            <option value="1">Active</option>
-            <option value="0">Inactive</option>
-        </select><br>
-        <button onclick="submitUpdatedQuestion()">Update Question</button>
-        <button onclick="$('#updateQuestionWrapper').hide()">Cancel</button>
-    </div>
 
 </body>
 </html >

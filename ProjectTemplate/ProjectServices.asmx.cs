@@ -1151,15 +1151,14 @@ namespace ProjectTemplate
 
             string sqlConnectString = getConString();
             //this is a simple update, with parameters to pass in values
-            string sqlUpdate = "update news set title = IF(@newTitleValue = '', title, @newTitleValue), content = IF(@newContentValue = ''," +
-                "content, @newContentValue) were announcement_id = @newsIdValue";
+            string sqlUpdate = "update news set title = IF(@newTitleValue = '', title, @newTitleValue), content = IF(@newContentValue = '', content, @newContentValue) where news_id = @newsIdValue";
 
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
             MySqlCommand sqlCommand = new MySqlCommand(sqlUpdate, sqlConnection);
 
             sqlCommand.Parameters.AddWithValue("@newsIdValue", nid);
-            sqlCommand.Parameters.AddWithValue("@titleValue", title);
-            sqlCommand.Parameters.AddWithValue("@contentValue", content);
+            sqlCommand.Parameters.AddWithValue("@newTitleValue", title);
+            sqlCommand.Parameters.AddWithValue("@newContentValue", content);
 
 
             //this time, we're not using a data adapter to fill a data table.  We're just
