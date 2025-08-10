@@ -1405,7 +1405,7 @@ namespace ProjectTemplate
             DataTable sqlDt = new DataTable("news");
 
             string sqlConnectString = getConString();
-            string sqlSelect = "select title, content, posted_at from news order by news_id asc";
+            string sqlSelect = "select title, content, posted_at from news where is_active=1 order by news_id asc";
 
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
             MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);

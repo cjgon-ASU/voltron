@@ -1181,9 +1181,10 @@ function submitAnonFeedback() {
     });
 }
 
-function UserNews() {
-    var webMethod = "ProjectServices.asmx/GetAllNews";
+function loadEmployeeNews() {
+    var webMethod = "ProjectServices.asmx/UserNews";
     var parameters = "{}";
+
     $.ajax({
         type: "POST",
         url: webMethod,
@@ -1194,8 +1195,11 @@ function UserNews() {
             var newsArray = response.d;
 
             if (newsArray.length > 0) {
-                document.getElementById("employeeAnnouncement").innerHTML =
-                    newsArray[newsArray.length - 1].content;
+                var html = "";
+                for (var i = 0; i < newsArray.length; i++) {
+                    html += "<div class='news-item'>" + newsArray[i].content + "</div>";
+                }
+                document.getElementById("employeeAnnouncement").innerHTML = html;
             } else {
                 document.getElementById("employeeAnnouncement").innerHTML = "";
             }
@@ -1203,7 +1207,7 @@ function UserNews() {
     });
 }
 
-document.addEventListener("DOMContentLoaded", UserNews);
+document.addEventListener("DOMContentLoaded", loadEmployeeNews);
 </script>
 
 	<style>
