@@ -928,6 +928,75 @@
 
 
 
+        function GetAllFeedback() {
+            $.ajax({
+                type: "POST",
+                url: "ProjectServices.asmx/GetAllFeedback",
+                data: "{}",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    var feedbackData = response.d;
+                    var tbody = $("#allFeedbackTableBody");
+                    tbody.empty();
+
+                    if (!feedbackData || feedbackData.length === 0) {
+                        tbody.append("<tr><td colspan='8'>No feedback found.</td></tr>");
+                    } else {
+                        feedbackData.forEach(function (fb) {
+                            tbody.append(
+                                `<tr>
+                            <td>${fb.feedback_id}</td>
+                            <td>${fb.question_id}</td>
+                            <td>${fb.department || "N/A"}</td>
+                            <td>${fb.category || "N/A"}</td>
+                            <td>${fb.score !== null ? fb.score : "N/A"}</td>
+                            <td>${fb.feedback_text || "No text"}</td>
+                            <td>${fb.feedback_time ? new Date(fb.feedback_time).toLocaleString() : "N/A"}</td>
+                            <td>${fb.is_resolved ? "✅" : "❌"}</td>
+                        </tr>`
+                            );
+                        });
+                    }
+
+                    $("#allFeedbackModal").show();
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error loading feedback:", error, xhr.responseText);
+                    alert("Error loading feedback.");
+                }
+            });
+        }
+
+
+        function ResolveFeedback() {
+            var fid = document.getElementById("resolveFeedbackId").value.trim();
+
+            if (!fid) {
+                alert("Please enter a Feedback ID to resolve.");
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "ProjectServices.asmx/ResolveFeedback",
+                data: JSON.stringify({ fid: fid }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.d === true) {
+                        alert("Feedback resolved successfully!");
+                        document.getElementById("resolveFeedbackId").value = "";
+                        document.getElementById("resolveFeedbackModal").style.display = "none";
+                    } else {
+                        alert("Failed to resolve feedback. Make sure the ID is correct and you have admin rights.");
+                    }
+                },
+                error: function () {
+                    alert("An error occurred while resolving the feedback.");
+                }
+            });
+        }
 
 
 
@@ -1003,8 +1072,13 @@
             document.getElementById("closeDeptStressDateWrapper").addEventListener("click", function () {
                 document.getElementById("deptStressDateWrapper").style.display = "none";
             });
+            document.getElementById("closeAllFeedbackModal").addEventListener("click", function () {
+                document.getElementById("allFeedbackModal").style.display = "none";
+            });
+            document.getElementById("closeResolveFeedbackModal").addEventListener("click", function () {
+                document.getElementById("resolveFeedbackModal").style.display = "none";
+            });
         });
-
 
 
 
@@ -1064,7 +1138,9 @@
         function openGetDeptStressAveragesForDateRange() {
             document.getElementById("deptStressDateWrapper").style.display = "block";
         }
-
+        function openResolveFeedbackModal() {
+            document.getElementById("resolveFeedbackModal").style.display = "block";
+        }
 
         function submitAnonFeedback() {
             var feedback = document.getElementById("feedbackText").value.trim();
@@ -1170,7 +1246,7 @@
         </div>
     </div>
 
-    
+
 
     <div id="submitAnonymousFeedback" class="modal" style="display: none;">
         <div class="modal-content">
@@ -1182,6 +1258,27 @@
                 <button onclick="submitAnonFeedback()">Submit</button>
             </div>
         </div>
+    </div>
+
+    <div id="userFeedbackModal" style="display:none;">
+        <button class="close" id="closeUserFeedbackModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+        <h3>Your Feedback</h3>
+        <table id="userFeedbackTable" border="1" cellpadding="5">
+            <thead>
+                <tr>
+                    <th>Feedback ID</th>
+                    <th>Question ID</th>
+                    <th>Department</th>
+                    <th>Category</th>
+                    <th>Score</th>
+                    <th>Feedback Text</th>
+                    <th>Feedback Time</th>
+                    <th>Resolved?</th>
+                </tr>
+            </thead>
+            <tbody id="userFeedbackTableBody">
+            </tbody>
+        </table>
     </div>
 
 
@@ -1509,6 +1606,49 @@
 
             <div id="deptStressDateResults" style="margin-top: 15px;"></div>
         </div>
+
+
+
+
+
+
+
+        <h1 style="font-size: 16px;">Feedback Management</h1>
+        <button id="getAllFeedback" onclick="GetAllFeedback();">Get All Feedback</button>
+        <button id="openResolveFeedback" onclick="openResolveFeedbackModal();">Resolve Feedback</button>
+
+        <div id="allFeedbackModal" class="modal" style="display: none;">
+            <button class="close" id="closeAllFeedbackModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>All Feedback</h3>
+            <table id="allFeedbackTable" border="1">
+                <thead>
+                    <tr>
+                        <th>Feedback ID</th>
+                        <th>Question ID</th>
+                        <th>Department</th>
+                        <th>Category</th>
+                        <th>Score</th>
+                        <th>Feedback Text</th>
+                        <th>Feedback Time</th>
+                        <th>Resolved?</th>
+                    </tr>
+                </thead>
+                <tbody id="allFeedbackTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div id="resolveFeedbackModal" style="display:none;">
+                <h3>Resolve Feedback</h3>
+                <label for="resolveFeedbackId">Feedback ID:</label>
+                <input type="text" id="resolveFeedbackId" placeholder="Enter Feedback ID" />
+                <p></p>
+                <button onclick="ResolveFeedback()">Resolve</button>
+            </div>
+        </div>
+
+
+
 
     </div>
 
