@@ -808,6 +808,125 @@
         }
 
 
+        function GetAverageStressScore() {
+            var dept = $("#avgStressDept").val().trim();
+
+            if (!dept) {
+                alert("Please enter a department name.");
+                return;
+            }
+
+            var webMethod = "ProjectServices.asmx/GetAvgStressScore";
+            var parameters = JSON.stringify({ dept: dept });
+
+            console.log("Requesting average stress score for department:", dept);
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    console.log("Response:", response);
+                    alert("Average Stress Score for " + dept + " (this week): " + response.d.toFixed(2));
+                    $("#avgStressDept").val(""); 
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error:", status, error);
+                    alert("An error occurred while retrieving the average stress score.");
+                }
+            });
+        }
+
+
+        function GetDeptStressAverages() {
+            var webMethod = "ProjectServices.asmx/GetDeptStressAveragesForCurrentWeek";
+
+            console.log("Requesting average stress scores for all departments this week...");
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: "{}",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    console.log("Response:", response);
+
+                    var stressData = response.d;
+
+                    if (!stressData || stressData.length === 0) {
+                        alert("No stress data found for this week.");
+                        return;
+                    }
+
+                    var outputHtml = "<table border='1' cellpadding='5'><tr><th>Department</th><th>Average Stress Score</th></tr>";
+                    for (var i = 0; i < stressData.length; i++) {
+                        outputHtml += "<tr>" +
+                            "<td>" + (stressData[i].department || "N/A") + "</td>" +
+                            "<td>" + (stressData[i].stress !== null ? stressData[i].stress.toFixed(2) : "No Data") + "</td>" +
+                            "</tr>";
+                    }
+                    outputHtml += "</table>";
+
+                    $("#deptStressResults").html(outputHtml);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error:", status, error);
+                    alert("An error occurred while retrieving department stress scores.");
+                }
+            });
+        }
+
+        function GetDeptStressAveragesByDate() {
+            var webMethod = "ProjectServices.asmx/GetDeptStressAveragesForDateRange";
+
+            var startDate = $("#stressStartDate").val();
+            var endDate = $("#stressEndDate").val();
+
+            if (!startDate || !endDate) {
+                alert("Please select both start and end dates.");
+                return;
+            }
+
+            console.log("Requesting average stress scores from " + startDate + " to " + endDate);
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: JSON.stringify({ startDate: startDate, endDate: endDate }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    console.log("Response:", response);
+
+                    var stressData = response.d;
+
+                    if (!stressData || stressData.length === 0) {
+                        $("#deptStressDateResults").html("<p>No data found for the selected range.</p>");
+                        return;
+                    }
+
+                    var outputHtml = "<table border='1' cellpadding='5'><tr><th>Department</th><th>Average Stress Score</th></tr>";
+                    for (var i = 0; i < stressData.length; i++) {
+                        outputHtml += "<tr>" +
+                            "<td>" + (stressData[i].department || "N/A") + "</td>" +
+                            "<td>" + (stressData[i].stress !== null ? stressData[i].stress.toFixed(2) : "No Data") + "</td>" +
+                            "</tr>";
+                    }
+                    outputHtml += "</table>";
+
+                    $("#deptStressDateResults").html(outputHtml);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error:", status, error);
+                    alert("An error occurred while retrieving department stress scores for the selected date range.");
+                }
+            });
+        }
+
+
 
 
 
@@ -875,7 +994,15 @@
             document.getElementById("closeUpdateNewsWrapper").addEventListener("click", function () {
                 document.getElementById("updateNewsWrapper").style.display = "none";
             });
-
+            document.getElementById("closeAvgStressWrapper").addEventListener("click", function () {
+                document.getElementById("avgStressWrapper").style.display = "none";
+            });
+            document.getElementById("closeDeptStressWrapper").addEventListener("click", function () {
+                document.getElementById("deptStressWrapper").style.display = "none";
+            });
+            document.getElementById("closeDeptStressDateWrapper").addEventListener("click", function () {
+                document.getElementById("deptStressDateWrapper").style.display = "none";
+            });
         });
 
 
@@ -927,6 +1054,15 @@
         }
         function openUpdateNews() {
             document.getElementById("updateNewsWrapper").style.display = "block";
+        }
+        function openGetAvgStressScore() {
+            document.getElementById("avgStressWrapper").style.display = "block";
+        }
+        function openGetDeptStressAveragesForCurrentWeek() {
+            document.getElementById("deptStressWrapper").style.display = "block";
+        }
+        function openGetDeptStressAveragesForDateRange() {
+            document.getElementById("deptStressDateWrapper").style.display = "block";
         }
 
 
@@ -1009,12 +1145,12 @@
     <button id="logOffBtn" onclick="LogOff();">Log Off</button>
     <button id="clockInBtn" onclick="ClockIn();">Clock In</button>
     <button id="clockOutBtn" onclick="ClockOut();" style="display: none;">Clock Out</button>
-    <p id="clockedinconfirm" style="display:none;">You are clocked in!</p>
     <button onclick="WeeklyHours()">Check Weekly Hours Worked</button>
-    <div id="weeklyHoursDisplay"></div>
     <button onclick="loadUserFeedback()">View My Feedback</button>
+    <button onclick="openAnonFeedback()">Submit Anonymous Feedback</button>
+    <p id="clockedinconfirm" style="display:none;">You are clocked in!</p>
     <div id="userFeedbackContainer"></div>
-
+    <div id="weeklyHoursDisplay"></div>
 
     <div id="emojiFeedbackModal" class="modal" style="display: none">
         <div class="modal-content">
@@ -1034,7 +1170,7 @@
         </div>
     </div>
 
-    <button onclick="openAnonFeedback()">Submit Anonymous Feedback</button>
+    
 
     <div id="submitAnonymousFeedback" class="modal" style="display: none;">
         <div class="modal-content">
@@ -1326,6 +1462,52 @@
             <textarea id="updateNewsContent" placeholder="Enter new content (optional)"></textarea>
             <br />
             <button onclick="UpdateNewsById()">Update News</button>
+        </div>
+
+
+
+
+
+        <h1 style="font-size: 16px;">Stress Management</h1>
+        <button id="getAvgStressScore" onclick="openGetAvgStressScore();">Avg Stress Scores by Dept</button>
+        <button id="getDeptStressAveragesForCurrentWeek" onclick="openGetDeptStressAveragesForCurrentWeek();">Weekly Stress Averages by Dept</button>
+        <button id="getDeptStressAveragesForDateRange" onclick="openGetDeptStressAveragesForDateRange();">Weekly Stress Averages by Date Range</button>
+
+        <div id="avgStressWrapper" style="display:none; margin-top: 20px;">
+            <button class="close" id="closeAvgStressWrapper" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
+            <h3>Get Average Stress Score</h3>
+            <label for="avgStressDept">Department:</label>
+            <input type="text" id="avgStressDept" placeholder="Enter Department" />
+            <p></p>
+            <button onclick="GetAverageStressScore()">Get Score</button>
+        </div>
+
+        <div id="deptStressWrapper" style="display:none; margin-top: 20px;">
+            <button class="close" id="closeDeptStressWrapper"
+                    style="background-color: #f44336; font-size: 8px; padding: 10px;">
+                X
+            </button>
+            <h3>Average Stress Scores for All Departments (This Week)</h3>
+            <button onclick="GetDeptStressAverages()">Load Scores</button>
+            <div id="deptStressResults" style="margin-top: 15px;"></div>
+        </div>
+
+        <div id="deptStressDateWrapper" style="display:none; margin-top: 20px;">
+            <button class="close" id="closeDeptStressDateWrapper"
+                    style="background-color: #f44336; font-size: 8px; padding: 10px;">
+                X
+            </button>
+            <h3>Average Stress Scores for All Departments (Custom Date Range)</h3>
+
+            <label for="stressStartDate">Start Date:</label>
+            <input type="date" id="stressStartDate">
+
+            <label for="stressEndDate">End Date:</label>
+            <input type="date" id="stressEndDate">
+
+            <button onclick="GetDeptStressAveragesByDate()">Load Scores</button>
+
+            <div id="deptStressDateResults" style="margin-top: 15px;"></div>
         </div>
 
     </div>
