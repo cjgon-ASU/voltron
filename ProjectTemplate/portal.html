@@ -1181,10 +1181,9 @@ function submitAnonFeedback() {
     });
 }
 
-function loadEmployeeNews() {
+function UserNews() {
     var webMethod = "ProjectServices.asmx/GetAllNews";
     var parameters = "{}";
-
     $.ajax({
         type: "POST",
         url: webMethod,
@@ -1204,7 +1203,7 @@ function loadEmployeeNews() {
     });
 }
 
-document.addEventListener("DOMContentLoaded", loadEmployeeNews);
+document.addEventListener("DOMContentLoaded", UserNews);
 </script>
 
 	<style>
