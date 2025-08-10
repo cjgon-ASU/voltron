@@ -537,7 +537,7 @@
         }
 
 
-        // ✅ Admin check: show admin tools if user is admin
+        
         $.ajax({
             type: "POST",
             url: "ProjectServices.asmx/AdminCheck",
@@ -1142,47 +1142,70 @@
             document.getElementById("resolveFeedbackModal").style.display = "block";
         }
 
-        function submitAnonFeedback() {
-            var feedback = document.getElementById("feedbackText").value.trim();
+function submitAnonFeedback() {
+    var feedback = document.getElementById("feedbackText").value.trim();
 
-            if (!feedback) {
-                alert("Please enter your feedback before submitting.");
-                return;
+    if (!feedback) {
+        alert("Please enter your feedback before submitting.");
+        return;
+    }
+
+    var webMethod = "ProjectServices.asmx/SubmitFeedback";
+    var parameters = JSON.stringify({
+        qid: "",
+        empid: "",
+        dept: "",
+        cat: "Anonymous",
+        score: "",
+        feedback: encodeURIComponent(feedback)
+    });
+
+    $.ajax({
+        type: "POST",
+        url: webMethod,
+        data: parameters,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (msg) {
+            if (msg.d === true) {
+                alert("Anonymous feedback submitted. Thank you!");
+                document.getElementById("feedbackText").value = "";
+                document.getElementById("submitAnonymousFeedback").style.display = "none";
+            } else {
+                alert("Anonymous feedback submission failed.");
             }
-
-            var webMethod = "ProjectServices.asmx/SubmitFeedback";
-            var parameters = JSON.stringify({
-                qid: "",
-                empid: "",
-                dept: "",
-                cat: "Anonymous",
-                score: "",
-                feedback: encodeURIComponent(feedback)
-            });
-
-            $.ajax({
-                type: "POST",
-                url: webMethod,
-                data: parameters,
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                success: function (msg) {
-                    if (msg.d === true) {
-                        alert("Anonymous feedback submitted. Thank you!");
-                        document.getElementById("feedbackText").value = "";
-                        document.getElementById("submitAnonymousFeedback").style.display = "none";
-                    } else {
-                        alert("Anonymous feedback submission failed.");
-                    }
-                },
-                error: function () {
-                    alert("Server error while submitting feedback.");
-                }
-            });
-            
+        },
+        error: function () {
+            alert("Server error while submitting feedback.");
         }
-       
-	</script>
+    });
+}
+
+function loadEmployeeNews() {
+    var webMethod = "ProjectServices.asmx/GetAllNews";
+    var parameters = "{}";
+
+    $.ajax({
+        type: "POST",
+        url: webMethod,
+        data: parameters,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            var newsArray = response.d;
+
+            if (newsArray.length > 0) {
+                document.getElementById("employeeAnnouncement").innerHTML =
+                    newsArray[newsArray.length - 1].content;
+            } else {
+                document.getElementById("employeeAnnouncement").innerHTML = "";
+            }
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", loadEmployeeNews);
+</script>
 
 	<style>
         * {
@@ -1227,7 +1250,10 @@
     <p id="clockedinconfirm" style="display:none;">You are clocked in!</p>
     <div id="userFeedbackContainer"></div>
     <div id="weeklyHoursDisplay"></div>
-
+<h2>Announcements</h2>
+<div id="employeeAnnouncement" 
+     style="border: 1px solid #ccc; padding: 10px; width: 300px; min-height: 50px; background-color: #f9f9f9;">
+</div>
     <div id="emojiFeedbackModal" class="modal" style="display: none">
         <div class="modal-content">
             <button class="close" id="closeModal" style="background-color: #f44336; font-size: 8px; padding: 10px;">X</button>
