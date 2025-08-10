@@ -1459,9 +1459,11 @@ namespace ProjectTemplate
                 double totalHours = 0.0;
                 sqlConnection.Close();
 
-                //convert seconds worked to hours worked
-                double totalSeconds = Convert.ToDouble(seconds);
-                totalHours = totalSeconds / 3600.0;
+            //convert seconds worked to hours worked
+            if (seconds == DBNull.Value || seconds == null)
+                return 0.0;
+            double totalSeconds = Convert.ToDouble(seconds);
+            totalHours = totalSeconds / 3600.0;
                 return totalHours;
                           
                      
